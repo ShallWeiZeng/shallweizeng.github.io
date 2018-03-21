@@ -79,13 +79,20 @@
 
 
 
+<meta name="description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题 Java采用共享内存的方式实现线程通信">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JMM">
 <meta property="og:url" content="http://yoursite.com/2018/03/21/JMM/index.html">
 <meta property="og:site_name" content="Hexo">
-<meta property="og:updated_time" content="2018-03-21T14:47:10.199Z">
+<meta property="og:description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题 Java采用共享内存的方式实现线程通信">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/7637566-cc03b737d73ef436.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/TIM%E5%9B%BE%E7%89%8720180301181537.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/20160921182337904%20(1">
+<meta property="og:updated_time" content="2018-03-21T15:00:15.776Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JMM">
+<meta name="twitter:description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题 Java采用共享内存的方式实现线程通信">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/7637566-cc03b737d73ef436.png">
 
 
 
@@ -181,7 +188,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
-            Home
+            Startseite
           </a>
         </li>
       
@@ -191,7 +198,7 @@
             
               <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
-            Archives
+            Archiv
           </a>
         </li>
       
@@ -255,9 +262,9 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               
-                <span class="post-meta-item-text">Posted on</span>
+                <span class="post-meta-item-text">Veröffentlicht am</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-03-21T22:47:10+08:00">
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2018-03-21T22:47:31+08:00">
                 2018-03-21
               </time>
             
@@ -295,7 +302,75 @@
       
 
       
-        
+        <h1 id="线程通信机制"><a href="#线程通信机制" class="headerlink" title="线程通信机制"></a>线程通信机制</h1><h3 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h3><p>在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。</p>
+<p>因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。</p>
+<p>所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题</p>
+<p><strong><em>Java采用共享内存的方式实现线程通信机制</em></strong></p>
+<p>实现方式</p>
+<ul>
+<li>Synchronized 同步</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 线程间通信 通过Synchronized</span><br><span class="line"> */</span><br><span class="line">public class SynchronizeTest &#123;</span><br><span class="line"></span><br><span class="line">    private int add = 1;</span><br><span class="line">    private synchronized void add(int num)&#123;</span><br><span class="line">        add += num;</span><br><span class="line">        System.out.println(Thread.currentThread() + &quot;:&quot; + add);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        SynchronizeTest st = new SynchronizeTest();</span><br><span class="line">        Thread runA = new Thread(()-&gt;st.add(10));</span><br><span class="line">        Thread runB = new Thread(()-&gt;st.add(-5));</span><br><span class="line">        runA.start();</span><br><span class="line">        runB.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong><em>两个Thread拥有同一个SynchronizeTest实例化的对象st，因为synchronized的限制，所以两个哪一个最先开始运行都会对后面的调用产生影响，这样也就完成了线程间的通信</em></strong></p>
+<ul>
+<li>volatile完成同步</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 使用volatile完成同步</span><br><span class="line"> */</span><br><span class="line">public class VolatileTest &#123;</span><br><span class="line">    private volatile boolean flag = false;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        VolatileTest vt = new VolatileTest();</span><br><span class="line">        Thread runA = new Thread(()-&gt;&#123;</span><br><span class="line">            while (!vt.flag)&#123;&#125;</span><br><span class="line">            System.out.println(&quot;runA&quot;);</span><br><span class="line">        &#125;);</span><br><span class="line">        Thread runB = new Thread(()-&gt;&#123;</span><br><span class="line">            while (!vt.flag)&#123;</span><br><span class="line">                System.out.println(&quot;runB&quot;);</span><br><span class="line">                vt.flag = true;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        runA.start();</span><br><span class="line">        runB.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>volatile保证内存可见性，两个线程无论何时读取的flag值都是最新值，所以上面的代码最后的输出结果只有是</p>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/7637566-cc03b737d73ef436.png" alt="result.png"></p>
+<p>只有等线程runB打印完后flag的值才发生变化，然后才会打印runA</p>
+<ul>
+<li>wait/notify 通信<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line">import java.util.ArrayList;</span><br><span class="line">import java.util.List;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * 线程间通过 wait notify 通信</span><br><span class="line"> */</span><br><span class="line">public class WaitNotifyCase &#123;</span><br><span class="line">    private static List&lt;Integer&gt; list = new ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args)&#123;</span><br><span class="line">        final Object lock = new Object();</span><br><span class="line"></span><br><span class="line">        new Thread(()-&gt;&#123;</span><br><span class="line">            synchronized (lock)&#123;</span><br><span class="line">                if (list.size() != 5)&#123;</span><br><span class="line">                    try &#123;</span><br><span class="line">                        System.out.println(&quot;Thread A block , release lock monitor&quot;);</span><br><span class="line">                        lock.wait();</span><br><span class="line">                        System.out.println(&quot;Thread A wakeUp&quot;);</span><br><span class="line">                    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">                        e.printStackTrace();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                System.out.println(&quot;do other thing&quot;);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            Thread.sleep(50);</span><br><span class="line">        &#125; catch (InterruptedException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        new Thread(()-&gt;&#123;</span><br><span class="line">            synchronized (lock)&#123;</span><br><span class="line">                System.out.println(&quot;Thread B get lock monitor&quot;);</span><br><span class="line">                for (int i = 0; i &lt; 10; i++) &#123;</span><br><span class="line">                    list.add(i);</span><br><span class="line">                    if (list.size() == 5)&#123;</span><br><span class="line">                        System.out.println(&quot;wakeUp Thread A&quot;);</span><br><span class="line">                        lock.notify();</span><br><span class="line">                    &#125;</span><br><span class="line">                    System.out.println(&quot;add : &quot; + i);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;).start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><strong><em>线程A当list的长度不为5时，线程A会释放掉lock锁，线程进入放弃CPU，进入阻塞状态，然后交由线程B获取到了lock锁对list进行相加<br>当list的长度为5的时候，会唤醒线程A，线程A现在进入可运行状态并尝试获取锁，当线程B完成操作后释放锁，然后线程A才会打印信息</em></strong></p>
+<p>这样写的好处在于节省了CPU的时间，让CPU不必再轮询判断某个条件的成立，节省了时间</p>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/TIM%E5%9B%BE%E7%89%8720180301181537.png" alt="wait.png"></p>
+<h1 id="内存模型"><a href="#内存模型" class="headerlink" title="内存模型"></a>内存模型</h1><p>Java的内存模型(JMM)其实质也就是共享内存模型</p>
+<p>JMM首先是描述了变量之间的各种关系,以及实际上这些变量在内存中的存储。按我的理解简单来说就是:抹平了不同系统，硬件上对内存操作的差别，实现了”一次编写，到处运行”</p>
+<p><strong><em>JMM将内存分为主内存和工作内存</em></strong></p>
+<p>JMM规定所有的变量都存储在主内存中，每个线程有自己的内存空间，称为工作内存。</p>
+<p>线程的工作内存存储的变量主要是主内存的共享变量的副本和一些局部变量与方法参数，线程对变量的所有操作都是在工作内存中处理的,不能直接读取主内存中的变量，同样的，不同线程之间的不能直接访问对方工作内存中变量。</p>
+<p>两个线程之间想要通信的话，需要</p>
+<ul>
+<li>将先线程A工作内存中的共享变量的副本刷新到主内存中</li>
+<li>线程B从主内存中读线程A刷新过的共享变量的值</li>
+</ul>
+<p>整个的路线图是</p>
+<p>线程A —–&gt; 主内存 (刷新写)<br><br>主内存—–&gt; 线程B (刷新读)</p>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/20160921182337904%20(1" alt="route.jpg">.jpg)</p>
+<p>JMM一般通过上面的路径实现了线程间交互，总的来说，JMM提供了一个抽象的概念,实际上是通过JVM完成对JMM的实现</p>
+<h2 id="JVM实现JMM"><a href="#JVM实现JMM" class="headerlink" title="JVM实现JMM"></a>JVM实现JMM</h2><p>JVM 将内存模型分为两种</p>
+<ul>
+<li>Thread stack<br><br>每个线程拥有自己的线程栈区，里面保存线程内的的所有本地变量和本地方法,一个线程只会读取自己线程栈区的内容，所以在写一些方法的时候，多个线程访问同一段代码或者方法不会相互造成影响。</li>
+<li>heap<br><br>堆里面包含了Java应用创建的所有的对象信息</li>
+</ul>
+<p><strong><em>调用栈和本地变量和本地方法都存储在栈中，对象保存在堆区</em></strong></p>
+<h2 id="JMM的基本原理"><a href="#JMM的基本原理" class="headerlink" title="JMM的基本原理"></a>JMM的基本原理</h2><p><strong>指令重排序</strong></p>
+<ul>
+<li>一般来说，为了提高性能，处理器和编译器会对程序进行重排序处理</li>
+<li>指令重排序只有满足以下两个条件才可进行重排序<br><br>1.在单线程的情况下不能改变程序运行的结果<br><br>2.存在数据依赖关系的不允许重排序</li>
+</ul>
+<p>从其目的和条件可以比较清楚点看出一个问题:<br><br>重排序可能在多线程环境下导致数据不安全的情况发生</p>
+<p><strong>先行发生(happens-before)</strong></p>
+<ul>
+<li>在JMM中，如果存在一个操作的执行结果需要对另一个操作可见,那么这两个操作之间必须要存在happens-before关系，这个的两个操作既可以在同一个线程，也可以在不同的两个线程中</li>
+<li>保证内存可见性</li>
+<li>两个操作之间存在happens-before关系,并不意味着一定要按照happens-before原则制定的顺序执行。如果重排序之后的执行结果与按照happens-before关系执行的结果一致，那么这种重排序并不非法</li>
+</ul>
+<p><strong>as-if-serial</strong></p>
+<ul>
+<li>不管怎么重排序（编译器和处理器为了提高并行度），（单线程）程序的执行结果不能被改变</li>
+<li>编译器，runtime 和处理器都必须遵守as-if-serial语义</li>
+</ul>
+<p><strong>内存屏障(Memory Barrier)</strong></p>
+<ul>
+<li>内存屏障(Memory Barrier),是一个CPU指令,保证某些特定操作的执行顺序，影响某些指令的内存可见性（例如volatile）</li>
+<li>一般来说，编译器和CPU为了优化性能，会进行指令重排序。内存屏障这条指令会告诉编译器和CPU:不论什么指令，都不可以和这条内存屏障指令进行重排序</li>
+<li>Memory Barrier将强制刷出各种CPU cache</li>
+</ul>
+<p><strong><em>比如用volatile修饰的变量，将会在写之后插入一个write-barrier指令，该指令将会强制刷出这条指令之前的所有cache，在读之前插入一条read-barrier指令，使得在读入这个变量的时候，会将前面所有cache刷出去，这样就保证了用volatile修饰的变量永远得到的是最新的</em></strong></p>
+
       
     </div>
     
@@ -379,8 +454,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            Übersicht
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -396,7 +480,7 @@
                 <a href="/archives/">
               
                   <span class="site-state-item-count">2</span>
-                  <span class="site-state-item-name">posts</span>
+                  <span class="site-state-item-name">Artikel</span>
                 </a>
               </div>
             
@@ -423,6 +507,22 @@
       </section>
 
       
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#线程通信机制"><span class="nav-number">1.</span> <span class="nav-text">线程通信机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#共享内存"><span class="nav-number">1.0.1.</span> <span class="nav-text">共享内存</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#内存模型"><span class="nav-number">2.</span> <span class="nav-text">内存模型</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM实现JMM"><span class="nav-number">2.1.</span> <span class="nav-text">JVM实现JMM</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#JMM的基本原理"><span class="nav-number">2.2.</span> <span class="nav-text">JMM的基本原理</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
 
       
 
@@ -446,7 +546,7 @@
 </div>
 
 
-  <div class="powered-by">Powered by <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
+  <div class="powered-by">Erstellt mit  <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a></div>
 
 
 
