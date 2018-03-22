@@ -79,20 +79,20 @@
 
 
 
-<meta name="description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题&amp;lt; !– more –&amp;gt; J">
+<meta name="description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JMM">
 <meta property="og:url" content="http://yoursite.com/2018/03/21/JMM/index.html">
 <meta property="og:site_name" content="ShallWei Zeng">
-<meta property="og:description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题&amp;lt; !– more –&amp;gt; J">
+<meta property="og:description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题">
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/7637566-cc03b737d73ef436.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/TIM%E5%9B%BE%E7%89%8720180301181537.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E6%B5%81%E7%A8%8B.jpg">
-<meta property="og:updated_time" content="2018-03-22T14:02:26.270Z">
+<meta property="og:updated_time" content="2018-03-22T16:33:14.389Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JMM">
-<meta name="twitter:description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题&amp;lt; !– more –&amp;gt; J">
+<meta name="twitter:description" content="线程通信机制共享内存在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。 因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。 所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/7637566-cc03b737d73ef436.png">
 
 
@@ -337,7 +337,7 @@
       
         <h1 id="线程通信机制"><a href="#线程通信机制" class="headerlink" title="线程通信机制"></a>线程通信机制</h1><h3 id="共享内存"><a href="#共享内存" class="headerlink" title="共享内存"></a>共享内存</h3><p>在常见的开发模型中，常常会设置一个或多个共享变量，该共享变量可以被多个线程所使用，这样就达到了线程通信的目的。</p>
 <p>因为线程是没有直接联系的，任何线程都有权限去修改的共享变量，所以一般在并发的时候可能需要将共享变量放置进临界区内，所有尝试去修改的线程都会去竞争临界区资源。</p>
-<p>所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题<br>&lt; !– more –&gt;</p>
+<p>所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题<br><a id="more"></a></p>
 <p><strong><em>Java采用共享内存的方式实现线程通信机制</em></strong></p>
 <p>实现方式</p>
 <ul>
