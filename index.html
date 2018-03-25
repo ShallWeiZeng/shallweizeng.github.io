@@ -341,8 +341,7 @@
 
       
         
-          
-            <h1 id="分布式存储简单概述"><a href="#分布式存储简单概述" class="headerlink" title="分布式存储简单概述"></a>分布式存储简单概述</h1><p>以wiki上的定义：</p>
+          <h1 id="分布式存储简单概述"><a href="#分布式存储简单概述" class="headerlink" title="分布式存储简单概述"></a>分布式存储简单概述</h1><p>以wiki上的定义：</p>
 <blockquote>
 <p>A distributed data store is a computer network where information is stored on more than one node, often in a replicated fashion. It is usually specifically used to refer to either a distributed database where users store information on a number of nodes, or a computer network in which users store information on a number of peer network nodes.</p>
 </blockquote>
@@ -353,117 +352,13 @@
 <li>结构化数据 代表为关系数据库</li>
 <li>半结构化数据 前两者之间的一种中间结构</li>
 </ul>
-<h1 id="单机存储系统"><a href="#单机存储系统" class="headerlink" title="单机存储系统"></a>单机存储系统</h1><p>单机存储系统是单机存储引擎的一种封装，而单机存储引擎主要是利用哈希表，B树等数据结构在机械硬盘，SSD等持久化介质实现数据存储</p>
-<h2 id="存储引擎"><a href="#存储引擎" class="headerlink" title="存储引擎"></a>存储引擎</h2><p>存储引擎是数据如何存放的关键</p>
-<p>依据不同的业务情况和场景选用不同的存储引擎是实现高效写入数据，读取数据的方式</p>
-<h3 id="哈希存储引擎"><a href="#哈希存储引擎" class="headerlink" title="哈希存储引擎"></a>哈希存储引擎</h3><p>常见的代表数据库：redis、memcache等</p>
-<p>采用哈希结构的存储数据，其检索效率非常之高,索引的检索可以一次定位,IO次数可以达到很小</p>
-<p>但是哈希索引不好使用范围查询，同时在遇到不同索引键存在相同哈希值时，hash碰撞会导致链式扫描，这点在遇到大量Hash值相等的情况后性能并一定比B树结构的索引高</p>
-<h3 id="B树存储引擎"><a href="#B树存储引擎" class="headerlink" title="B树存储引擎"></a>B树存储引擎</h3><p>相比较哈希存储引擎，B树存储引擎不仅支持随机读取，还支持范围扫描。在MySQL InnoDB中，有一个称为聚焦索引的数据存储其中，组织成B+树</p>
-<p>MySQL InnoDB按照页面（Page）来组织数据，每个页面对应B+树的一个节点。其中，叶子节点保存每行的完整数据，非叶子节点保存索引信息。数据在每个节点中有序存储，数据库查询时需要从根节点开始二分查找直到叶子节点</p>
-<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/B%E6%A0%91.png" alt="B-tree.png"></p>
-<p>每读取一个节点，如果对应页面不在内存中，需要从磁盘中读取并缓存起来。B+树的根节点是常驻内存的，因此B+树一次检索最多需要h-1次磁盘IO，复杂度为<br>O(h) = O(logd^N)(d为出度，N为元素个数，h为B+树高度)</p>
-<h3 id="LSM存储引擎"><a href="#LSM存储引擎" class="headerlink" title="LSM存储引擎"></a>LSM存储引擎</h3><p>代表数据库：HBase、levelDB等</p>
-<p>LSM树(Log Structured Merge Tree)的思想非常朴素，就是将对数据的修改增量保持在内存中，达到指定大小限制后将这些修改操作批量写入磁盘，读取时需要合并磁盘中的历史数据和内存中最近的修改操作。</p>
-<p>LSM为一种基于硬盘的数据结构，与B树相比，能显著减少硬盘磁盘臂的开销，但是相比较B+树而言，LSM树牺牲了部分读性能，用来大幅度提高写性能</p>
-<p>原理：LSM把一棵大树拆分成N棵小树，它首先写入内存中，随着小树越来越大，内存中的小树会flush到磁盘中，磁盘中的树定期做merge操作，合并一棵大树。但是在读的时候，由于不知道数据在哪棵树上，因此需要遍历小树，每棵小树内部数据是有序的</p>
-<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/LSM.png" alt="lsm.png"></p>
-<h2 id="数据模型"><a href="#数据模型" class="headerlink" title="数据模型"></a>数据模型</h2><p>一般分为三种形式</p>
-<ul>
-<li>文件模型</li>
-<li>关系模型</li>
-<li>键值模型</li>
-</ul>
-<h2 id="数据恢复与压缩"><a href="#数据恢复与压缩" class="headerlink" title="数据恢复与压缩"></a>数据恢复与压缩</h2><p>数据库系统以及其他分布式存储系统一般采用操作日志技术实现故障恢复。</p>
-<p>操作日志分为回滚日志（UNDO Log），重做日志（REDO Log）以及UNDO/REDO日志。如果记录事务修改前的状态，则为回滚日志；相应地，如果记录事务修改后的状态，则为重做日志</p>
-<h3 id="操作日志"><a href="#操作日志" class="headerlink" title="操作日志"></a>操作日志</h3><ul>
-<li>重做日志</li>
-</ul>
-<p>存储系统若采用REDO日志，其写操作流程如下：</p>
-<ol>
-<li><p>将REDO日志以追加写的方式写入磁盘的日志文件</p>
-</li>
-<li><p>将REDO日志的修改操作应用到内存中</p>
-</li>
-<li><p>返回操作成功或者失败</p>
-</li>
-</ol>
-<h3 id="数据压缩"><a href="#数据压缩" class="headerlink" title="数据压缩"></a>数据压缩</h3><p>压缩的本质就是找数据的重复或者规律</p>
-<ul>
-<li>Huffman编码</li>
-<li>LZ系列压缩算法</li>
-<li>BMDiff与Zippy</li>
-</ul>
-<h1 id="分布式存储系统"><a href="#分布式存储系统" class="headerlink" title="分布式存储系统"></a>分布式存储系统</h1><h2 id="分布式协议"><a href="#分布式协议" class="headerlink" title="分布式协议"></a>分布式协议</h2><h3 id="CAP定理"><a href="#CAP定理" class="headerlink" title="CAP定理"></a>CAP定理</h3><p>一个分布式系统不可能同时满足一致性（C），可用性（A），分区容错性（P）</p>
-<ul>
-<li>一致性：指的是数据在多个副本中是否能够保持一致的特性</li>
-<li>可用性：系统提供的服务必须处于可用的状态，对于用户的每一个请求总要在有限的时间内返回结果</li>
-<li>分区容错性：分布式系统在遇到任何网络分区故障的时候，仍然需要能够保证对外提供满足一致性和可用性的服务<h3 id="BASE理论"><a href="#BASE理论" class="headerlink" title="BASE理论"></a>BASE理论</h3></li>
-<li>基本可用 （Basically Avaliable）：在分布式系统中出现不可预知故障的时候，允许损失部分可用性</li>
-<li>弱状态 （Soft state）：允许系统中的数据存在中间状态，并认为该中间状态不会印象系统的整体可用性</li>
-<li>最终一致性 （Eventually consistent）：系统中所有的副本，在经过一段时间的同步后，最终能够达到一个一致的状态。五种变种：因果一致性、读己之所写、会话一致性、单调一致性、单调读一致性</li>
-</ul>
-<h3 id="2PC与3PC"><a href="#2PC与3PC" class="headerlink" title="2PC与3PC"></a>2PC与3PC</h3><p>在分布式系统中，每一个机器节点虽然都能够明确知道自己在进行事务操作过程中的结果是成功还是失败，但是却无法直接获取到其他分布式节点的操作结果</p>
-<p>2PC 二阶段提交</p>
-<ul>
-<li>阶段一：提交事务请求</li>
-</ul>
-<ol>
-<li>事务询问<br>协调者向所有的参与制发送事务内容，询问是否可以执行事务提交操作，并开始等待各参与者的响应</li>
-<li>执行事务<br>各参与者节点执行事务操作，并将Undo和Redo信息记入事务日志中</li>
-<li>各参与者向协调者反馈事务询问的响应<br>如果参与者成功执行了事务操作，那么就反馈给协调者Yes响应，表示事务可以执行，反之，反馈No响应</li>
-</ol>
-<ul>
-<li><p>阶段二：执行事务提交<br>协调者根据参与者的反馈情况决定是否进行事务提交操作。有两种可能性</p>
-<ul>
-<li><p>执行事务提交<br>如果协调者从所有的参与者获得的反馈都是yes响应，那么就会执行事务提交</p>
-<ol>
-<li>发送提交请求<br>协调者向所有参与者节点发出Commit请求</li>
-<li>事务提交<br>参与者接受到Commit请求后，会正式执行事务提交操作，并在完成提交之后释放在整个事务执行期间占 用的事务资源<ol>
-<li>完成事务<br>协调者接收到所有参与者反馈的Ack消息后，完成事务</li>
-</ol>
-</li>
-</ol>
-<ul>
-<li>中断事务<br>任何一个参与者向协调在这反馈了No响应，或者在等待超时后，协调者尚无法接收到所有参与者的反馈响应，那么就会中断事务    </li>
-</ul>
-<ol>
-<li>发送回滚请求<br>协调者向所有参与者节点发出Rollback请求</li>
-<li>事务回滚<br>参与者接受到Rollback请求后，会利用其在阶段一种记录的Undo信息来执行事务回滚操作，并在完成回滚后释放在整个事务执行期间占用的资源</li>
-<li>反馈事务回滚结果<br>参与者在完成事务回滚之后，向协调者发送Ack消息</li>
-<li>中断事务<br>协调者接收到所有参与者反馈的Ack消息后，完成事务中断</li>
-</ol>
-</li>
-</ul>
-</li>
-</ul>
-<p>优缺点：</p>
-<ul>
-<li>优点：原理简单，实现方便</li>
-<li>缺点： 同步阻塞，单点问题，脑裂（数据不一致），太过保守<ul>
-<li>同步阻塞（所谓‘同步’,意思是在发出一个信息之后，等待有回应才返回，同理可推‘异步’；而阻塞是指程序在等待消息结果时的状态，消息结果没返回，那么当前线程就会被吊起，同理可推‘非阻塞’）<br>在二阶段提交的执行阶段，所有参与该事务的操作的逻辑都处于阻塞状态</li>
-<li>单点问题<br>在二阶段中，如果协调者出现问题，那么整个流程将无法运转。更为严重的是，如果协调者是在阶段而中出现问题，那么其他事务参与者将一直处于锁定事务资源的状态中。</li>
-<li>数据不一致<br>在执行事务提交的时候，出现了局部网络异常或者协调者在尚未发送完Commit请求之前吱声发生了崩溃，导致只有部分参与者收到了Commit请求。一些参与者完成事务的提交，一些无法进行事务的提交，整个系统出现不一致情况</li>
-<li>太过保守<br>如果某些参与者出现故障而导致协调者出现无法获取所有的响应信息，那么协调者就可能会依据超时机制判断是否需要中断事务。缺少了容错机制，一个节点错误导致整个事务失败</li>
-</ul>
-</li>
-</ul>
-<h2 id="一致性协议"><a href="#一致性协议" class="headerlink" title="一致性协议"></a>一致性协议</h2><h3 id="Raft"><a href="#Raft" class="headerlink" title="Raft"></a>Raft</h3><p>Raft 是一种为了管理复制日志的一致性算法</p>
-<p>每个Raft节点都有着以下三种状态：</p>
-<ul>
-<li>跟随者（Follower）</li>
-<li>候选者（Candidate）</li>
-<li>领导者（Leader）</li>
-</ul>
-<p>领导者：向跟随者发送心跳，接收从客户端发来的请求，并同步到其他节点</p>
-<p>跟随者：接收来自候选者的投票请求和接收领导者的心跳，如果在一段时间内没有收到任何请求或心跳那么成为候选者并且发起选举。</p>
-<p>候选者：若收到大部分节点的投票则成为领导者，如果在选举过程中发现领导者或者任期比自己高的候选者，则变为跟随者，如果选举超时，则重新发起选举。</p>
-<p>参考</p>
-<p>《大规模分布式存储系统》</p>
-<p><a href="http://thesecretlivesofdata.com/raft/" target="_blank" rel="noopener">Raft 动画演示</a></p>
-<p><a href="https://raft.github.io/raft.pdf" target="_blank" rel="noopener">Raft 英文论文</a></p>
-
-          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/03/25/分布式存储概述/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
@@ -609,7 +504,7 @@
 <p>对于下面的代码<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">public class SynchronizeTest &#123;</span><br><span class="line">    public synchronized void t1()&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 静态同步方法</span><br><span class="line">     */</span><br><span class="line">    public static synchronized void t2()&#123;</span><br><span class="line">    &#125;</span><br><span class="line">    /**</span><br><span class="line">     * 同步代码块</span><br><span class="line">     */</span><br><span class="line">    public void t3()&#123;</span><br><span class="line">        synchronized (SynchronizeTest.class)&#123;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/22/synchronized关键字理解/#espandi" rel="contents">
+            <a class="btn" href="/2018/03/22/synchronized关键字理解/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
@@ -757,7 +652,7 @@
 <p>所以在共享变量多了之后，临界区的管理会变得比较复杂，容易出现死锁等问题<br>
           <!--noindex-->
           <div class="post-button text-center">
-            <a class="btn" href="/2018/03/21/JMM/#espandi" rel="contents">
+            <a class="btn" href="/2018/03/21/JMM/#more" rel="contents">
               阅读全文 &raquo;
             </a>
           </div>
