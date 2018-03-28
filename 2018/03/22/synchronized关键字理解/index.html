@@ -91,7 +91,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/MarkWord%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/MarkWord%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/monitor.png">
-<meta property="og:updated_time" content="2018-03-27T14:24:26.860Z">
+<meta property="og:updated_time" content="2018-03-28T15:35:59.454Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="synchronized关键字理解">
 <meta name="twitter:description" content="synchronized synchronized可以保证方法和代码块在运行时，同一时刻只有一个线程可以进入到临界区(互斥性),同时还保证了共享变量的内存可见性  同一时刻只有一个线程可以进入到临界区 对于下面的代码12345678910111213141516public class SynchronizeTest &amp;#123;    public synchronized void t1()&amp;">
@@ -427,7 +427,34 @@
 <p>一般情况下，上述观点正确，但是如果一系列的连续加锁解锁操作，可能导致不必要的性能损耗，所以就有了锁粗化</p>
 <p>锁粗化就是将多个连续的加锁、解锁连接在一起，扩展成一个范围更大的锁</p>
 <h3 id="轻量级锁"><a href="#轻量级锁" class="headerlink" title="轻量级锁"></a>轻量级锁</h3><p>在多线程交替执行同步块的情况下，尽量避免重量级锁引起的性能消耗，但是如果多个线程在同一时刻进入临界区，会导致轻量级锁膨胀升级重量级锁</p>
+<p><strong><em>获取锁</em></strong></p>
+<ol>
+<li><p>判断当前对象是否处于无锁状态（hashcode、0、01），若是，则JVM首先将当前线程的栈帧中建立一个名为锁记录（Lock Record）的空间，用于存储锁对象目前的Mark Word的拷贝（官方把这份拷贝加了一个Displaced前缀，即Displaced Mark Word）；否则执行步骤（3）</p>
+</li>
+<li><p>JVM利用CAS操作尝试将对象的Mark Word</p>
+</li>
+</ol>
+<div id="flowchart-0" class="flow-chart"></div>
+
+
+
+
 <p>参考<br><br>《Java并发编程的艺术》<br><br>《深入了解Java虚拟机》<br><br><a href="https://www.jianshu.com/p/fe49b156b1a6" target="_blank" rel="noopener">https://www.jianshu.com/p/fe49b156b1a6</a></p>
+<p><script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: Start|past:>http://www.google.com[blank]
+e=>end: End:>http://www.google.com
+op1=>operation: My Operation|past
+op2=>operation: Stuff|current
+sub1=>subroutine: My Subroutine|invalid
+cond=>condition: Yes
+or No?|approved:>http://www.google.com
+c2=>condition: Good idea|rejected
+io=>inputoutput: catch something...|request
+
+st->op1(right)->cond
+cond(yes, right)->c2
+cond(no)->sub1(left)->op1
+c2(yes)->io->e
+c2(no)->op2->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
