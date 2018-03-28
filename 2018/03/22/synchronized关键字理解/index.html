@@ -91,7 +91,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/MarkWord%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/MarkWord%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/monitor.png">
-<meta property="og:updated_time" content="2018-03-28T16:01:29.727Z">
+<meta property="og:updated_time" content="2018-03-28T16:09:00.794Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="synchronized关键字理解">
 <meta name="twitter:description" content="synchronized synchronized可以保证方法和代码块在运行时，同一时刻只有一个线程可以进入到临界区(互斥性),同时还保证了共享变量的内存可见性  同一时刻只有一个线程可以进入到临界区 对于下面的代码12345678910111213141516public class SynchronizeTest &amp;#123;    public synchronized void t1()&amp;">
@@ -448,7 +448,10 @@ c2=>condition: 当前对象的Mark Word
 c3=>condition: CAS操作尝试将对象的Mark Word
 更新为指向Lock Record的指针
 是否成功
-op1=>operation: JVM首先将当前线程的栈帧中建立一个名为锁记录（Lock Record）的空间，用于存储锁对象目前的Mark Word的拷贝（官方把这份拷贝加了一个Displaced前缀，即Displaced Mark Word）|past
+op1=>operation: JVM首先将当前线程的栈帧中
+建立一个名为锁记录（Lock Record）的空间，
+用于存储锁对象目前的Mark Word的拷贝
+（官方把这份拷贝加了一个Displaced前缀，即Displaced Mark Word）|past
 op2=>operation: 帧被抢占，锁膨胀为重量级锁，后面等待的线程进入阻塞|past
 op3=>operation: 执行同步块|past
 
@@ -458,7 +461,9 @@ c1(no)->c2
 c2(yes, right)->op3
 c2(no)->op2
 c3(yes, right)->op3
-c3(no)->c2</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
+c3(no)->c2
+op3->e
+op2->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script></p>
 
       
     </div>
