@@ -91,7 +91,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/MarkWord%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/MarkWord%E7%9A%84%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/monitor.png">
-<meta property="og:updated_time" content="2018-03-28T16:09:00.794Z">
+<meta property="og:updated_time" content="2018-03-28T16:11:18.942Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="synchronized关键字理解">
 <meta name="twitter:description" content="synchronized synchronized可以保证方法和代码块在运行时，同一时刻只有一个线程可以进入到临界区(互斥性),同时还保证了共享变量的内存可见性  同一时刻只有一个线程可以进入到临界区 对于下面的代码12345678910111213141516public class SynchronizeTest &amp;#123;    public synchronized void t1()&amp;">
@@ -456,7 +456,7 @@ op2=>operation: 帧被抢占，锁膨胀为重量级锁，后面等待的线程�
 op3=>operation: 执行同步块|past
 
 st->c1
-c1(yes, right)->op1(right)->c3
+c1(yes, right)->op1(left)->c3
 c1(no)->c2
 c2(yes, right)->op3
 c2(no)->op2
