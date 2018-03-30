@@ -94,7 +94,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E8%BD%BB%E9%87%8F%E7%BA%A7%E9%94%81%E8%8E%B7%E5%8F%96%E9%94%81%E8%BF%87%E7%A8%8B.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E8%BD%BB%E9%87%8F%E7%BA%A7%E9%94%81%E9%87%8A%E6%94%BE%E9%94%81%E8%BF%87%E7%A8%8B.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%81%8F%E5%90%91%E9%94%81%E8%8E%B7%E5%8F%96%E9%94%81%E8%BF%87%E7%A8%8B.png">
-<meta property="og:updated_time" content="2018-03-29T13:32:07.741Z">
+<meta property="og:updated_time" content="2018-03-30T15:56:04.580Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="synchronized关键字理解">
 <meta name="twitter:description" content="synchronized synchronized可以保证方法和代码块在运行时，同一时刻只有一个线程可以进入到临界区(互斥性),同时还保证了共享变量的内存可见性  同一时刻只有一个线程可以进入到临界区 对于下面的代码public class SynchronizeTest &amp;#123;    public synchronized void t1()&amp;#123;    &amp;#125;    /**">
@@ -412,10 +412,11 @@
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public static String createStringBuffer(String s1, String s2) &#123;</span><br><span class="line">      StringBuffer sb = new StringBuffer();</span><br><span class="line">      sb.append(s1);</span><br><span class="line">      sb.append(s2);</span><br><span class="line">      return sb.toString();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
 <p>上面的代码不会直接返回StringBuffer，那么StringBuffer将不会逃逸出方法</p>
 <ul>
-<li><p>栈上分配<br>Java对象在堆上分配，GC会回收堆中不再使用的对象。若能通过逃逸分析确定某些对象不会逃出方法之外，则改对象可在栈上分配内存，该对象所占用的内存空间就可以随栈帧出栈而销毁，而不需要GC的介入，从而提高系统性能</p>
-</li>
-<li><p>同步消除</p>
-</li>
+<li>栈上分配</li>
+</ul>
+<p>Java对象在堆上分配，GC会回收堆中不再使用的对象。若能通过逃逸分析确定某些对象不会逃出方法之外，则改对象可在栈上分配内存，该对象所占用的内存空间就可以随栈帧出栈而销毁，而不需要GC的介入，从而提高系统性能</p>
+<ul>
+<li>同步消除</li>
 </ul>
 <p>线程同步本身比较耗，如果确定一个对象不会逃逸出线程，无法被其他线程访问到，那么该对象的读写就不会存在竞争，对这个变量的同步措施就可以消除，单线程中没有锁竞争</p>
 <ul>
