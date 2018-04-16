@@ -87,10 +87,13 @@
 <meta property="og:site_name" content="ShallWei Zeng">
 <meta property="og:description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-04-16T13:55:41.044Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E6%9E%84%E9%80%A0.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E5%8A%A8%E6%80%81%E7%89%B9%E6%80%A7.png">
+<meta property="og:updated_time" content="2018-04-16T15:31:42.684Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="单机存储引擎--B+树">
 <meta name="twitter:description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E6%9E%84%E9%80%A0.png">
 
 
 
@@ -394,19 +397,22 @@
 <li>柱面是分区的最小单位</li>
 <li>柱面是所有盘片表面上到中心主轴的距离相等的磁道集合</li>
 </ol>
+<a id="more"></a>
 <blockquote>
 <p>数据的读写按柱面进行，即磁头读写数据时首先在同一柱面内从“0”磁头开始进行操作，依次向下在同一柱面的不同盘面即磁头上进行操作，只在同一柱面的所有磁头全部读写完毕后磁头才转移到下一柱面。<br>因为选取磁头只需要通过电子切换即可，而选取柱面则必须通过机械切换。电子切换相当快，比在机械上磁头向邻近磁道移动快的多，所以，数据的读写按柱面进行，而不按盘面进行。<br><br>一个磁道写满数据后，就在同一柱面的下一个盘面来写，一个柱面写满后，才移到下一个扇区开始写数据</p>
 </blockquote>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E6%9E%84%E9%80%A0.png" alt="磁盘构造"></p>
 <h2 id="硬盘容量"><a href="#硬盘容量" class="headerlink" title="硬盘容量"></a>硬盘容量</h2><p>硬盘容量由以下技术因素决定：</p>
 <ul>
 <li>记录密度：磁道一英寸的段中可以放入的位数</li>
 <li>磁盘密度：从盘片中心出发半径为一英寸的段内可以有的磁道数</li>
 <li>面密度： 记录密度与磁道密度的乘积</li>
 </ul>
-<h2 id="磁盘操作"><a href="#磁盘操作" class="headerlink" title="磁盘操作"></a>磁盘操作</h2><p>磁盘用连接到一个机械臂的读写头来读写存储在磁性表面的位<br><img src="" alt="磁盘的动态特性.png"><br>通过沿着半径轴移动这个传动比，驱动器可以将读写投定位在盘面上的任何磁道上。这样的机械运动成为寻道。</p>
+<h2 id="磁盘操作"><a href="#磁盘操作" class="headerlink" title="磁盘操作"></a>磁盘操作</h2><p>磁盘用连接到一个机械臂的读写头来读写存储在磁性表面的位</p>
+<p>通过沿着半径轴移动这个传动比，驱动器可以将读写投定位在盘面上的任何磁道上。这样的机械运动成为寻道。</p>
 <p>一旦读写头定位到了期望的磁道上，那么当磁道上的每个为通过它的下面时，读写头可以感知到这个位的值（读），也可以修改这个位的值（写）。</p>
 <p>有多个盘片的磁盘针对每个盘面都有一个独立的读写头，读写头垂直排列，一致行动，在任何时刻，所有的读写头都位于同一个柱面上</p>
-<p><img src="" alt="磁盘的动态特性.png"></p>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E5%8A%A8%E6%80%81%E7%89%B9%E6%80%A7.png" alt="磁盘的动态特性.png"></p>
 <p><strong><em>磁盘数据访问时间</em></strong></p>
 <p>磁盘以扇区大小的块来读写数据。对扇区的访问时间有三个主要的部分：</p>
 <ul>
