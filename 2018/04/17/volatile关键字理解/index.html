@@ -90,7 +90,7 @@
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/2682552-03c5047a59a9e179.png">
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/2682552-81ad8bf739ed25a9.png">
 <meta property="og:image" content="https://upload-images.jianshu.io/upload_images/2682552-a120c899cd011aa5.png">
-<meta property="og:updated_time" content="2018-04-17T15:01:26.059Z">
+<meta property="og:updated_time" content="2018-04-17T15:06:10.872Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="volatile关键字理解">
 <meta name="twitter:description" content="volatile 可见性。对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入 原子性。对任意单个volatile变量的读写具有原子性，但类似于volatile++这种复合操作不具有原子性  volatile的happens-before关系对于程序员来说，volatile对线程的内存可见性的影响比volatile自身的特性更为重要 从JSR-133开始，vo">
@@ -354,6 +354,7 @@
 <p>从JSR-133开始，volatile变量的读写可以实现线程之间的通信</p>
 <p>从内存语义的角度来说，volatile与监视器锁有相同的效果: volatile写和监视器的释放有相同的内存语义;volatile读与监视器的获取有相同的内存语义</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">class VolatileExample &#123;</span><br><span class="line">    int a = 0;</span><br><span class="line">    volatile boolean flag = false;</span><br><span class="line"></span><br><span class="line">    public void writer() &#123;</span><br><span class="line">        a = 1;                   //1</span><br><span class="line">        flag = true;               //2</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void reader() &#123;</span><br><span class="line">        if (flag) &#123;                //3</span><br><span class="line">            int i =  a;           //4</span><br><span class="line">            System.out.println(i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class VolatileTest &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        VolatileExample ve = new VolatileExample();</span><br><span class="line">        new Thread(ve::writer).start();</span><br><span class="line">        new Thread(ve::reader).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
 <p>线程A执行writer方法，线程B执行reader方法。依据happens-before规则，这个过程建立的happens before关系可以分成：</p>
 <ol>
 <li>根据程序次序规则，1 happens before 2；3 happens before 4</li>

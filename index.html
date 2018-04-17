@@ -341,8 +341,7 @@
 
       
         
-          
-            <h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><ul>
+          <h2 id="volatile"><a href="#volatile" class="headerlink" title="volatile"></a>volatile</h2><ul>
 <li>可见性。对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入</li>
 <li>原子性。对任意单个volatile变量的读写具有原子性，但类似于volatile++这种复合操作不具有原子性</li>
 </ul>
@@ -350,49 +349,13 @@
 <p>从JSR-133开始，volatile变量的读写可以实现线程之间的通信</p>
 <p>从内存语义的角度来说，volatile与监视器锁有相同的效果: volatile写和监视器的释放有相同的内存语义;volatile读与监视器的获取有相同的内存语义</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">class VolatileExample &#123;</span><br><span class="line">    int a = 0;</span><br><span class="line">    volatile boolean flag = false;</span><br><span class="line"></span><br><span class="line">    public void writer() &#123;</span><br><span class="line">        a = 1;                   //1</span><br><span class="line">        flag = true;               //2</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void reader() &#123;</span><br><span class="line">        if (flag) &#123;                //3</span><br><span class="line">            int i =  a;           //4</span><br><span class="line">            System.out.println(i);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">public class VolatileTest &#123;</span><br><span class="line"></span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        VolatileExample ve = new VolatileExample();</span><br><span class="line">        new Thread(ve::writer).start();</span><br><span class="line">        new Thread(ve::reader).start();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>线程A执行writer方法，线程B执行reader方法。依据happens-before规则，这个过程建立的happens before关系可以分成：</p>
-<ol>
-<li>根据程序次序规则，1 happens before 2；3 happens before 4</li>
-<li>根据volatile规则， 2 happens before 3</li>
-<li>根据happens before的传递性规则，1 happens before 4</li>
-</ol>
-<p><strong><em>这里A线程写一个volatile变量后，B线程读同一个volatile变量。A线程在写volatile变量之前所有可见的共享变量，在B线程读同一个volatile变量后，将立即变得对B线程可见</em></strong></p>
-<p><img src="" alt="result"></p>
-<h3 id="volatile读写内存语义"><a href="#volatile读写内存语义" class="headerlink" title="volatile读写内存语义"></a>volatile读写内存语义</h3><p>volatile写的内存语义:</p>
-<ul>
-<li>当写一个volatile变量是，JMM会把该线程对应的本地内存中共享变量刷新到主内存中</li>
-</ul>
-<p>上面代码在线程A执行volatile写后，共享变量的状态示意图如下：</p>
-<p>TODO 切换图片源地址<br><img src="https://upload-images.jianshu.io/upload_images/2682552-03c5047a59a9e179.png" alt="共享变量状态转换图.png"></p>
-<p>线程A在写flag变量后，本地内存A中被线程更新过的两个共享变量的值被刷新到主存中。此时，本地内存A和主内存中的共享变量的值是一致的</p>
-<p>volatile读的内存语义:</p>
-<ul>
-<li>当读一个volatile变量时，JMM会把该线程对应的本地内存置为无效。线程接下来将从主内存中读取共享变量</li>
-</ul>
-<p>线程B在读同一个volatile变量后，共享变量的状态示意图</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/2682552-81ad8bf739ed25a9.png" alt="共享变量读状态图.png"></p>
-<p>线程B在读flag变量后，本地内存B已经被置为无效。此时，线程B必须从主内存中读取共享变量。线程B的读取操作将导致本地内存B与主内存中的共享变量的值也变成一致的了</p>
-<p>如果我们把volatile写和volatile读这两个步骤综合起来看的话，在读线程B读一个volatile变量后，写线程A在写这个volatile变量之前所有可见的共享变量的值都将立即变得对读线程B可见</p>
-<p>总结：</p>
-<ul>
-<li>线程A写一个volatile变量，实质上是线程A向接下来将要读这个volatile变量的某个线程发出了消息</li>
-<li>线程B读一个volatile变量，实质上是线程B接收了之前某个线程发出的信息</li>
-<li>线程A写一个volatile变量，随后线程B读这个volatile变量，这个过程是线程A通过主内存向线程B发送消息</li>
-</ul>
-<p>为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序。对应编译器来说，发现一个最优布置来最小化插入屏障的总数几乎不可能，为此，JMM采取保守策略。下面是基于保守策略的JMM内存屏障插入策略：</p>
-<ul>
-<li>在每个volatile写操作的前面插入一个StoreStore屏障</li>
-<li>在每个volatile写操作的后面插入一个StoreLoad屏障</li>
-<li>在每个volatile读操作的后面插入一个LoadLoad屏障</li>
-<li>在每个volatile读操作的后面插入一个LoadStore屏障</li>
-</ul>
-<p>上述内存屏障插入策略非常保守，但它可以保证在任意处理器平台，任意的程序中都能得到正确的volatile内存语义</p>
-<p>保守策略下，volatile写插入内存屏障后生成的指令序列图</p>
-<p>TODO<br><img src="https://upload-images.jianshu.io/upload_images/2682552-a120c899cd011aa5.png" alt="内存屏障序列图.png"></p>
-<p>参考:</p>
-<p><a href="http://www.infoq.com/cn/articles/java-memory-model-4/#anch158073" target="_blank" rel="noopener">http://www.infoq.com/cn/articles/java-memory-model-4/#anch158073</a> 讲解的非常详尽</p>
-
-          
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/04/17/volatile关键字理解/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
