@@ -91,7 +91,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E5%8A%A8%E6%80%81%E7%89%B9%E6%80%A7.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E4%BB%8EFlash%E8%8A%AF%E7%89%87%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%86%99%E5%85%A5Cell%E7%9A%84%E7%94%B5%E5%8E%8B%E7%8A%B6%E6%80%81.png">
-<meta property="og:updated_time" content="2018-04-22T15:28:11.792Z">
+<meta property="og:updated_time" content="2018-04-22T15:35:06.032Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="单机存储引擎--B+树">
 <meta name="twitter:description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
@@ -457,32 +457,32 @@
 <p>但是却不能单独檫除某个或者某段Page，或者单个或多个Cell（这个是造成SSD的致命缺点的一个根本原因）</p>
 <p>Erase完成之后，Cell中全为1，此时可以向其中写入数据，如果遇到待写入某个Cell的数据位恰好为1的时候，对应这个Cell的电路不做任何动作，其结果依然是1；<br><br>如果遇到待写入某个Cell的数据位为0的时候，则电路将对应Cell中的FG进行充电，Cell状态从1变为0，完成了写入<br><br>这个写入0的动作又叫做“Program”，即对这个Cell进行看Program</p>
 <p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%86%99%E5%85%A5Cell%E7%9A%84%E7%94%B5%E5%8E%8B%E7%8A%B6%E6%80%81.png" alt="写入Cell时的电压状态"></p>
-<h4 id="Flash芯片的通病"><a href="#Flash芯片的通病" class="headerlink" title="Flash芯片的通病"></a>Flash芯片的通病</h4><ol>
+<h4 id="Flash芯片的通病"><a href="#Flash芯片的通病" class="headerlink" title="Flash芯片的通病"></a>Flash芯片的通病</h4><ul>
 <li>Erase Before OverWrite</li>
-</ol>
+</ul>
 <p>相比机械磁盘，磁盘可以直接用刺头将对应的区域磁化成任何信号，如果之前保存的数据是1，新数据还是1，则磁头对1磁化，结果还是1；如果新数据是0，则磁头对1磁化，结果就变成了0</p>
 <p>Flash则不然，如果要向某个Block写入数据，则不管原来Block中是1还是0，新写入的数据是1还是0，必须先Erase整个Block为全1，然后才能向Block中写入新数据。</p>
 <p>这种额外Erase操作增加了覆盖写的开销</p>
 <p>总的来说是这样的一种情况：如果仅仅需要更改某个Block中的某个Page,那么在Erase之前，需要将全部Block中的数据读入SSD的RAM Buffer，然后Erase整个Block，再将待写入的新Page中的数据在RAM中覆盖到Block中对应的Page，然后将整个更新后的Block写入Flash芯片</p>
 <p>这样加大了写开销，形成了大规模的写惩罚（Write Amplification 写扩大），小块随机写IO会产生大倍数的写惩罚</p>
-<ol>
+<ul>
 <li>Wear Off</li>
-</ol>
+</ul>
 <p>随着FG充放电次数的增多，二氧化硅绝缘层的绝缘能力将遭到损耗，最后逐渐失去绝缘性，无法保证FG中有足够的电荷。此时，这个Cell就被宣判为损坏，即Wear Off</p>
 <p>损坏的Cell将拖累这个Cell所在的整个Page被标记为损坏，因为SSD寻址和IO的最小单位为Page。损坏的Page对应的逻辑地址将被重定向映射到其他完好的预留Page，SSD将这些重定向表保存在ROM中，每次加电均被载入RAM以供随时查询</p>
 <p>写惩罚大大加速Wear off，因为写惩罚做了很多无用功，增加了不必要的擦写</p>
 <p>MLC可擦写的寿命比较低，小于10000次;SLC高一些，十倍于MLC，小于100000。</p>
-<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><ol>
+<h4 id="解决方法"><a href="#解决方法" class="headerlink" title="解决方法"></a>解决方法</h4><ul>
 <li>损耗平衡</li>
-</ol>
+</ul>
 <p>为了避免同一个Cell被高频率檫写，SSD有这样一个办法：每次针对某个或者某段逻辑LBA地址（Logical Block Address）的写都写到SSD中的Free Space中，即上一次全盘Erase后从未被写过的Block/Page中，这些Free Space已经被放电，直接写入即可</p>
 <p>若再次遇到针对这个或者这段LBA地址的写操作，那么SSD会再次将待写入的数据重定向写到Free Space中，而将之前这个逻辑地址占用的Page标记为“Garbage”，可以回收再利用</p>
 <p>等到Block中一定比例的Page都被标记为“Garbage”时，并且存在大批满足条件的Block，SSD会批量回收这些Block</p>
 <p>SSD这样做就是为了将写操作平衡到所有可能的Block中，降低单位时间内每个Block的擦写次数，从而延长Cell的寿命</p>
 <p>由于Page的逻辑地址对应的物理地址是不断被重定向的，所以SSD内部需要微环境一个地址映射表。这种设计是比较复杂的，需要SSD上的CPU具有一定的能力运行对应的算法程序。这种避免wear off 过快的重定向算法称为Wear Leveling，即损耗平衡算法</p>
-<ol>
+<ul>
 <li>Wiper</li>
-</ol>
+</ul>
 <p>需要了解的是，影响一块SSD寿命和写入性能的最终决定因素就是Free Space，而且是存储介质自身所看到的Free Space而不是文件系统级别的Free Space</p>
 <p>但是SSD自身所认识的Free Space永远只会少于文件系统的Free Space ，并且只会越来越趋于0</p>
 <p>参考：</p>
