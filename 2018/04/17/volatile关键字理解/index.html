@@ -90,8 +90,9 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/result.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2%E5%9B%BE.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F%E8%AF%BB%E7%8A%B6%E6%80%81%E5%9B%BE.png">
-<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/2682552-a120c899cd011aa5.png">
-<meta property="og:updated_time" content="2018-04-17T15:22:45.869Z">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%E5%BA%8F%E5%88%97%E5%9B%BE.png">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E8%AF%BB%E6%93%8D%E4%BD%9C%E5%B1%8F%E9%9A%9C%E5%BA%8F%E5%88%97%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-04-23T14:19:08.673Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="volatile关键字理解">
 <meta name="twitter:description" content="volatile 可见性。对一个volatile变量的读，总是能看到（任意线程）对这个volatile变量最后的写入 原子性。对任意单个volatile变量的读写具有原子性，但类似于volatile++这种复合操作不具有原子性  volatile的happens-before关系对于程序员来说，volatile对线程的内存可见性的影响比volatile自身的特性更为重要 从JSR-133开始，vo">
@@ -394,7 +395,16 @@
 </ul>
 <p>上述内存屏障插入策略非常保守，但它可以保证在任意处理器平台，任意的程序中都能得到正确的volatile内存语义</p>
 <p>保守策略下，volatile写插入内存屏障后生成的指令序列图</p>
-<p>TODO<br><img src="https://upload-images.jianshu.io/upload_images/2682552-a120c899cd011aa5.png" alt="内存屏障序列图.png"></p>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%86%85%E5%AD%98%E5%B1%8F%E9%9A%9C%E5%BA%8F%E5%88%97%E5%9B%BE.png" alt="内存屏障序列图.png"></p>
+<p>StoreStore屏障在volatile写之前，这样前面的所有普通写操作已经对任意处理器可见了。</p>
+<p>这是因为StoreStore屏障将保障上面所有的普通写在volatile写之前刷新到主内存</p>
+<p>StoreLoad屏障的作用是避免volatile写与后面可能有的volatile读写操作重排序。编译器常常无法准确判断在一个volatile写的后面，是否需要插入一个StoreLoad（若一个volatile写之后方法立即return）</p>
+<p>为了保证能正确实现volatile的内存语义，JMM在这里采取了保守策略：在每个volatile写的后面或在每个volatile读的前面插入一个StoreLoad屏障</p>
+<p>因为volatile读写内存语义的常见使用模式是：一个写线程写volatile变量，多个读线程读同一个volatile变量。当读线程的数量大大超过写线程时，选择在volatile写之后插入StoreLoad屏障将带来可观的执行效率的提升</p>
+<p>这里体现JMM在实现上的一个特点：首先保证正确性，然后再去追求执行效率</p>
+<p>保守策略下，volatile读插入内存屏障生成的指令序列示意图：</p>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E8%AF%BB%E6%93%8D%E4%BD%9C%E5%B1%8F%E9%9A%9C%E5%BA%8F%E5%88%97%E5%9B%BE.png" alt="读操作屏障序列图"></p>
+<p>上图的LoadLoad屏障用来禁止处理器把上面的volatile读与下面的普通读重排序。LoadStore屏障用来禁止处理器把上面的volatile读与下面的普通写重排序</p>
 <p>参考:</p>
 <p><a href="http://www.infoq.com/cn/articles/java-memory-model-4/#anch158073" target="_blank" rel="noopener">http://www.infoq.com/cn/articles/java-memory-model-4/#anch158073</a> 讲解的非常详尽</p>
 
