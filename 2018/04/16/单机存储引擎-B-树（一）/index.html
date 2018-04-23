@@ -82,8 +82,8 @@
 <meta name="description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
 <meta name="keywords" content="数据库,数据结构">
 <meta property="og:type" content="article">
-<meta property="og:title" content="单机存储引擎--B+树">
-<meta property="og:url" content="http://yoursite.com/2018/04/16/单机存储引擎-B-树/index.html">
+<meta property="og:title" content="单机存储引擎--B+树(一)">
+<meta property="og:url" content="http://yoursite.com/2018/04/16/单机存储引擎-B-树（一）/index.html">
 <meta property="og:site_name" content="ShallWei Zeng">
 <meta property="og:description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
 <meta property="og:locale" content="zh-CN">
@@ -91,9 +91,9 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E5%8A%A8%E6%80%81%E7%89%B9%E6%80%A7.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E4%BB%8EFlash%E8%8A%AF%E7%89%87%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%86%99%E5%85%A5Cell%E7%9A%84%E7%94%B5%E5%8E%8B%E7%8A%B6%E6%80%81.png">
-<meta property="og:updated_time" content="2018-04-23T14:20:47.592Z">
+<meta property="og:updated_time" content="2018-04-23T14:23:16.401Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="单机存储引擎--B+树">
+<meta name="twitter:title" content="单机存储引擎--B+树(一)">
 <meta name="twitter:description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
 <meta name="twitter:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E6%9E%84%E9%80%A0.png">
 
@@ -125,13 +125,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/04/16/单机存储引擎-B-树/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/04/16/单机存储引擎-B-树（一）/"/>
 
 
 
 
 
-  <title>单机存储引擎--B+树 | ShallWei Zeng</title>
+  <title>单机存储引擎--B+树(一) | ShallWei Zeng</title>
   
 
 
@@ -258,7 +258,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/16/单机存储引擎-B-树/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/16/单机存储引擎-B-树（一）/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="ShallWei Zeng">
@@ -275,7 +275,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">单机存储引擎--B+树</h1>
+          <h1 class="post-title" itemprop="name headline">单机存储引擎--B+树(一)</h1>
         
 
         <div class="post-meta">
