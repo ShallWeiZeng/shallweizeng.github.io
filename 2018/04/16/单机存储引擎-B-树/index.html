@@ -91,7 +91,7 @@
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E7%A3%81%E7%9B%98%E5%8A%A8%E6%80%81%E7%89%B9%E6%80%A7.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E4%BB%8EFlash%E8%8A%AF%E7%89%87%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE.png">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/%E5%86%99%E5%85%A5Cell%E7%9A%84%E7%94%B5%E5%8E%8B%E7%8A%B6%E6%80%81.png">
-<meta property="og:updated_time" content="2018-04-23T14:17:57.542Z">
+<meta property="og:updated_time" content="2018-04-23T14:20:47.592Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="单机存储引擎--B+树">
 <meta name="twitter:description" content="机械硬盘的认识硬盘的组成硬盘的物理结构 磁头   主要任务完成盘片上数据的读写操作，盘片在高速旋转时，磁头会飞行在盘面上方，而不是接触盘面  每个盘片的两面都会有一个磁头， 当然有的硬盘有可能只有一个磁头，磁头的编号从0开始    机械臂   使磁头部件作径向移动的装置，已完成磁道变换   盘片   含有磁性的合金盘片，用来存取写入的数据：每张盘片的容量成为单碟容量，而硬盘的容量就是所有盘片容量的">
@@ -488,10 +488,16 @@
 <p>需要文件系统来通知SSD自身的Free Space，告诉它哪些逻辑地址现在并未被任何文件或者元数据所占用，可以被擦除</p>
 <p>所有的SSD厂商均会提供一个工具，称为“Wiper”</p>
 <p>操作系统中运行这个工具时，此工具扫描文件系统内不用的逻辑地址，并将这些地址通知给SSD，SSD便可以将对应的Block做擦除并回收到Free Space空间内</p>
-<h4 id="TRIM指令"><a href="#TRIM指令" class="headerlink" title="TRIM指令"></a>TRIM指令</h4><p>TRIM指令可以让文件系统在删除某个文件之后实时地通知SSD回收对应的空间</p>
+<ul>
+<li>TRIM指令</li>
+</ul>
+<p>TRIM指令可以让文件系统在删除某个文件之后实时地通知SSD回收对应的空间</p>
 <p>TRIM是ATA指令标准中的一个功能指令，在Linux Kernel 2.6.28中已经囊括，但是并不完善</p>
 <p>TRIM可以使SSD起死回生，开启了TRIM支持的SSD，在操作系统TRIM的支持下，可以成功的将性能提高到相对于SSD初始化使用时候的95%以上</p>
-<h4 id="Delay-Write-和-Combine-Write"><a href="#Delay-Write-和-Combine-Write" class="headerlink" title="Delay Write 和 Combine Write"></a>Delay Write 和 Combine Write</h4><p>Delay Write 是一种存储系统常用的写IO优化措施。</p>
+<ul>
+<li>Delay Write 和 Combine Write</li>
+</ul>
+<p>Delay Write 是一种存储系统常用的写IO优化措施。</p>
 <p>比如有先后两个针对同一个地址的IO—–Write1，Write2，先后被控制器收到了，而在Write1尚未被写入到永久存储介质之前，恰好Write2进入，此时控制器就可以直接在内存中将Write2覆盖Write1，在写入硬盘的时候只需要写入一次即可</p>
 <p>这样的操作减少了不必要的写</p>
 <p>Combine Write是另一种存储系统控制器常用的写IO优化方法。</p>
@@ -688,7 +694,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#机械硬盘的认识"><span class="nav-number">1.</span> <span class="nav-text">机械硬盘的认识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#硬盘的组成"><span class="nav-number">1.1.</span> <span class="nav-text">硬盘的组成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#硬盘的物理结构"><span class="nav-number">1.1.1.</span> <span class="nav-text">硬盘的物理结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#盘片的逻辑划分"><span class="nav-number">1.1.2.</span> <span class="nav-text">盘片的逻辑划分</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#硬盘容量"><span class="nav-number">2.</span> <span class="nav-text">硬盘容量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#磁盘操作"><span class="nav-number">3.</span> <span class="nav-text">磁盘操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#固态硬盘的认识"><span class="nav-number">4.</span> <span class="nav-text">固态硬盘的认识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cell"><span class="nav-number">4.1.</span> <span class="nav-text">Cell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#固态硬盘读写过程"><span class="nav-number">4.2.</span> <span class="nav-text">固态硬盘读写过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#从Flash芯片读取数据的过程"><span class="nav-number">4.2.1.</span> <span class="nav-text">从Flash芯片读取数据的过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#向Flash芯片中写入数据的过程"><span class="nav-number">4.2.2.</span> <span class="nav-text">向Flash芯片中写入数据的过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Flash芯片的通病"><span class="nav-number">4.2.3.</span> <span class="nav-text">Flash芯片的通病</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法"><span class="nav-number">4.2.4.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#TRIM指令"><span class="nav-number">4.2.5.</span> <span class="nav-text">TRIM指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Delay-Write-和-Combine-Write"><span class="nav-number">4.2.6.</span> <span class="nav-text">Delay Write 和 Combine Write</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#预留备用空间"><span class="nav-number">4.2.7.</span> <span class="nav-text">预留备用空间</span></a></li></ol></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#机械硬盘的认识"><span class="nav-number">1.</span> <span class="nav-text">机械硬盘的认识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#硬盘的组成"><span class="nav-number">1.1.</span> <span class="nav-text">硬盘的组成</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#硬盘的物理结构"><span class="nav-number">1.1.1.</span> <span class="nav-text">硬盘的物理结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#盘片的逻辑划分"><span class="nav-number">1.1.2.</span> <span class="nav-text">盘片的逻辑划分</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#硬盘容量"><span class="nav-number">2.</span> <span class="nav-text">硬盘容量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#磁盘操作"><span class="nav-number">3.</span> <span class="nav-text">磁盘操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#固态硬盘的认识"><span class="nav-number">4.</span> <span class="nav-text">固态硬盘的认识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Cell"><span class="nav-number">4.1.</span> <span class="nav-text">Cell</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#固态硬盘读写过程"><span class="nav-number">4.2.</span> <span class="nav-text">固态硬盘读写过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#从Flash芯片读取数据的过程"><span class="nav-number">4.2.1.</span> <span class="nav-text">从Flash芯片读取数据的过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#向Flash芯片中写入数据的过程"><span class="nav-number">4.2.2.</span> <span class="nav-text">向Flash芯片中写入数据的过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Flash芯片的通病"><span class="nav-number">4.2.3.</span> <span class="nav-text">Flash芯片的通病</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#解决方法"><span class="nav-number">4.2.4.</span> <span class="nav-text">解决方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#预留备用空间"><span class="nav-number">4.2.5.</span> <span class="nav-text">预留备用空间</span></a></li></ol></li></ol></li></ol></div>
             
 
           </div>
