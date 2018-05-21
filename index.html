@@ -249,6 +249,626 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/22/LinkedList源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/22/LinkedList源码阅读/" itemprop="url">LinkedList源码阅读</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-22T00:01:49+08:00">
+                2018-05-22 00:01:49
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java基础/" itemprop="url" rel="index">
+                    <span itemprop="name">Java基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="LinkedList源码阅读"><a href="#LinkedList源码阅读" class="headerlink" title="LinkedList源码阅读"></a>LinkedList源码阅读</h1><p>继承List和Deque接口实现的一个双向链表。实现了所有的list的操作，能操作包含null的所有元素</p>
+<p>所有的操作的执行都可以看做是一个双向链表。对链表索引的操作都会从头或者尾开始遍历，以最接近指定的索引位置为准</p>
+<p>注意这些实现不是synchronized，如果多线程需要同时并发的访问这个链表，并且至少有一个线程会修改这个list的结构，那么最后一定要保证是同步的。通常来说是用synchronize某个对象完成，也即是同步代码块，并且也是包裹住整个list</p>
+<p>如果list没有对象存在，这个list应该被Collections.synchronizedList来进行修饰。这个最好在创建的时候来处理，以防止异步的操作访问了这个list，: List list = Collections.synchronizedList(new LinkedList())</p>
+<h2 id="整体结构"><a href="#整体结构" class="headerlink" title="整体结构"></a>整体结构</h2><p>//TODO 添加结构图</p>
+<p>继承了AbstractSequentialList,实现了List， Deque，Cloneable，java.io.Serializable</p>
+<p>两种构造方法</p>
+<p>public LinkedList() 建一个空的列表</p>
+<p>public LinkedList(Collection&lt;? extends E&gt; c) 里面先建一个空的列表，然后将元素添加进这个列表</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public LinkedList(Collection&lt;? extends E&gt; c) &#123;</span><br><span class="line">    this();</span><br><span class="line">    addAll(c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>addAll方法<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">addAll(int index, Collection&lt;? extends E&gt; c)</span><br></pre></td></tr></table></figure></p>
+<p>内部采用内部类Node来表示每个插入进来的元素</p>
+<p>Node内部类</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private static class Node&lt;E&gt; &#123;</span><br><span class="line">    E item;</span><br><span class="line">    Node&lt;E&gt; next;</span><br><span class="line">    Node&lt;E&gt; prev;</span><br><span class="line"></span><br><span class="line">    Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) &#123;</span><br><span class="line">        this.item = element;</span><br><span class="line">        this.next = next;</span><br><span class="line">        this.prev = prev;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先看下这段代码<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if (index == size) &#123;</span><br><span class="line">    succ = null;</span><br><span class="line">    pred = last;</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    succ = node(index);</span><br><span class="line">    pred = succ.prev;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>会首先判断下添加位置的索引是否在最后一个，如果是则代表在原先的基础上的后面加上这个Collection的元素，如果不是的话，会找到对应的位置然后进行进入插入，相当于链表的数据中间插了一段数据</p>
+<p>linkFirst方法</p>
+<p>该方法是用来向头部插入一个元素，该方法是一个private，代表只能在类内部使用</p>
+<p>linkLast方法</p>
+<p>对应的， 该方法使用来在链表的最后的节点添加一个节点，只能在包内使用，也即是外部无法调用</p>
+<p>linkBefore</p>
+<p>插入一个节点到非空的后继上（succ）</p>
+<p>unlinkFirst</p>
+<p>将第一个非空的节点从列表中移除，将值设置为null，有助于GC</p>
+<p>unlinkLast</p>
+<p>将最后一个非空节点从列表中移除，方法也就是将链表中最后一个节点设置为null，上一个节点的后继也设置为null</p>
+<p>unlink </p>
+<p>移除一个非空节点</p>
+<p>getFirst, getLast</p>
+<p>分别获取头节点和尾节点</p>
+<p>contains</p>
+<p>判断是否包含某个节点， 通过调用indexOf实现，其内部查找逻辑是以查找节点是否为空分类讨论，都是从头到尾遍历链表，只是比较相等的方法不一样；如果传入的节点是null，那么判断的依据就是判断是否为null；如果不为null，则用equals进行判断</p>
+<p>remove</p>
+<p>与indexOf里面的实现方法类似，以判断是否为null，从头到尾遍历链表，找到之后从链表中移除unlink</p>
+<p>lastIndexOf</p>
+<p>返回一个最后与传入节点相等的索引位置</p>
+<p>peek</p>
+<p>取出链表中的头结点， 但不从链表中移除</p>
+<p>poll</p>
+<p>取出链表中的头结点，并移除</p>
+<p>offer</p>
+<p>添加一个节点到链表的最后位置</p>
+<p>offerFirst</p>
+<p>添加一个节点到链表的头结点，成为新的头结点</p>
+<p>push</p>
+<p>添加一个节点到链表头结点</p>
+<p>pop</p>
+<p>移除第一个节点</p>
+<p>内部类ListItr 继承ListIterator</p>
+<p>主要实现了迭代器的一些功能 hasNext, next, hasPrevious, previous, nextindex， previousIndex， set, add, forEachRemaining</p>
+<p>listIterator</p>
+<p>返回<strong>一个</strong>列表元素的迭代器list-iterator（具体的理解是，以当前节点的位置开始的游标），这个list-iterator是一个快速失败（的机制）：如果这个链表的结构在这个iterator被创建后的任意时间被修改，则这个iterator会抛出一个异常。返回的是一个对象，对象是个内部类ListStr，由父类ListIterator接受它。</p>
+<p>内部类DescendingIterator 继承Iterator</p>
+<p>一个提供从后往前遍历的迭代器（iterator），该iterator内部使用了ListStr来完成从后往前的功能</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private class DescendingIterator implements Iterator&lt;E&gt; &#123;</span><br><span class="line">    private final ListItr itr = new ListItr(size());</span><br><span class="line">    public boolean hasNext() &#123;</span><br><span class="line">        return itr.hasPrevious();</span><br><span class="line">    &#125;</span><br><span class="line">    public E next() &#123;</span><br><span class="line">        return itr.previous();</span><br><span class="line">    &#125;</span><br><span class="line">    public void remove() &#123;</span><br><span class="line">        itr.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>内部类LLSpliterator  继承Spliterator</p>
+<p>先说明一下Spliterator</p>
+<h2 id="Spliterator"><a href="#Spliterator" class="headerlink" title="Spliterator"></a>Spliterator</h2><p>Spliterator是自jdk1.8以来的新加入的一个类</p>
+<p>是一个遍历和分割源的对象。一些元素的源可以由Spliterator修饰，比如一个数组，一个Collection下的对象，一个IO Channel， 又或者一个通用的方法</p>
+<p>一个Spliterator可以独自遍历这些元素又或者按批量遍历这些元素。Spliterator可能会分出一些自己的元素称为另外一个Spliterator，被用于可能的并行的操作。一些使用Spliterator但是却又不能split的操作，又或者这些操作会有比较高的代价，都是大概率不会从并行流里面收益。遍历或者分开都会使这些元素“exhaust”(翻译不出来)；每个Spliterator仅适用单个批量操作</p>
+<p>一个Spliterator同样也有一系列的特点结构，源和元素。（</p><p>A Spliterator also reports a set of {@link #characteristics()} of its structure, source, and elements from among {@link #ORDERED {@link #DISTINCT}, {@link #SORTED}, {@link #SIZED}, {@link #NONNULL}, {@link #IMMUTABLE}, {@link #CONCURRENT}, and {@link #SUBSIZED}）。举个例子，一个Collection下的Spliterator会拥有size，一个Set下的Spliterator会拥有DISTNCT，和一个SortedSet下的Spliterator会拥有SORTED。这些特点会被合并到一个bit集合里</p>
+<p>一些特点（Characteristics）会额外的限制方法本身；举个例子如果有ORDERED这个特点，遍历方法一定会符合记录的顺序。新的特点可能会在未来被定义，所以具体的实现这个Spliterator的不应该给未列出的值赋予意义</p>
+<p>下面说明每个接口的意思</p>
+<h3 id="tryAdvance"><a href="#tryAdvance" class="headerlink" title="tryAdvance"></a>tryAdvance</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * If a remaining element exists, performs the given action on it,</span><br><span class="line"> * returning &#123;@code true&#125;; else returns &#123;@code false&#125;.  If this</span><br><span class="line"> * Spliterator is &#123;@link #ORDERED&#125; the action is performed on the</span><br><span class="line"> * next element in encounter order.  Exceptions thrown by the</span><br><span class="line"> * action are relayed to the caller.</span><br><span class="line"> *</span><br><span class="line"> * @param action The action</span><br><span class="line"> * @return &#123;@code false&#125; if no remaining elements existed</span><br><span class="line"> * upon entry to this method, else &#123;@code true&#125;.</span><br><span class="line"> * @throws NullPointerException if the specified action is null</span><br><span class="line"> */</span><br><span class="line">boolean tryAdvance(Consumer&lt;? super T&gt; action);</span><br></pre></td></tr></table></figure>
+<p>如果剩余的元素存在，执行这个给定的操作（action）返回true，否则返回false，如果这Spliterator是ORDERED的，这个操作就是在按顺序的下一个元素执行的，操作抛出的异常与调用者有关</p>
+<h3 id="forEachRemaining"><a href="#forEachRemaining" class="headerlink" title="forEachRemaining"></a>forEachRemaining</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Performs the given action for each remaining element, sequentially in</span><br><span class="line"> * the current thread, until all elements have been processed or the action</span><br><span class="line"> * throws an exception.  If this Spliterator is &#123;@link #ORDERED&#125;, actions</span><br><span class="line"> * are performed in encounter order.  Exceptions thrown by the action</span><br><span class="line"> * are relayed to the caller.</span><br><span class="line"> *</span><br><span class="line"> * @implSpec</span><br><span class="line"> * The default implementation repeatedly invokes &#123;@link #tryAdvance&#125; until</span><br><span class="line"> * it returns &#123;@code false&#125;.  It should be overridden whenever possible.</span><br><span class="line"> *</span><br><span class="line"> * @param action The action</span><br><span class="line"> * @throws NullPointerException if the specified action is null</span><br><span class="line"> */</span><br><span class="line">default void forEachRemaining(Consumer&lt;? super T&gt; action) &#123;</span><br><span class="line">    do &#123; &#125; while (tryAdvance(action));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对每个剩下的元素执行action，顺序的在当前线程执行，直到所有的元素都被处理了或者action抛出了异常。如果这个Spliterator是ORDERED的，这个action将会被顺序执行。同样的，抛出的异常与调用者有关。</p>
+<p>默认的实现重复的调用tryAdvance知道其返回错误。这个应该被重写覆盖</p>
+<h3 id="trySplit"><a href="#trySplit" class="headerlink" title="trySplit"></a>trySplit</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 如果这个Spliterator能够被分解，则返回一个Spliterator，包含着元素</span><br><span class="line"> * 并且不会被当前的Spliterator覆盖</span><br><span class="line"> *</span><br><span class="line"> *  如果这个Spliterator是ORDERED，</span><br><span class="line"> * 这个返回的Spliterator中的每个元素必须覆盖有一个严格的前缀</span><br><span class="line"> *</span><br><span class="line"> * 除非这个Spliterator含有无限的元素，那么重复的调用trySplit必须最终会返回一个null</span><br><span class="line"> * 在非空返回时：在分割之前为estimateSize报告的值，必须在分割之后返回的Spliterator的estimateSize的大或者等于。</span><br><span class="line"> * 如果这个Spliterator是SUBSIZED，那么该Spliterator的estimateSize必须等于分割之后返回后的Spliterator的estimateSize之和</span><br><span class="line"> * </span><br><span class="line"> * 这个方法可能会返回null，因为这些原因：空，在遍历开始之后不能进行切割，数据结构约束，效率的考虑</span><br><span class="line"> *</span><br><span class="line"> * @apiNote</span><br><span class="line"> * 理想的trySplit方法（无需遍历）有会有效的以恰好一半的方式分开其元素，运行平衡的并行计算</span><br><span class="line"> * 许多理想的分离策略有很高的效率。比如，只是近似的分裂近似平衡的树，又或者其树结构为叶子要不只有含有一个或者两个，</span><br><span class="line"> * 不能再继续分割这些节点了。然而，平衡的大偏差或者过低的效率机制（trySplit）都会导致差的并行性能</span><br><span class="line"> * </span><br><span class="line"> */</span><br><span class="line">Spliterator&lt;T&gt; trySplit();</span><br></pre></td></tr></table></figure>
+<h3 id="estimateSize"><a href="#estimateSize" class="headerlink" title="estimateSize"></a>estimateSize</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 返回一个forEachRemaining遍历可能会花费的元素的数量，</span><br><span class="line"> * 或者若是无限，不明，计算会花费太大则返回Long.MAX_VALUE</span><br><span class="line"> * 如果这个Spliterator是SIZED，并且还没有被部分的遍历或者分割，又或者这个Spliterator是SUBSIZED 并且还没有被部分的遍历，</span><br><span class="line"> * 这个预估值必须是一个精确的元素会被完整的遍历的数量。否则，这个估计值可能会任意地不准确，但必须按照trySplit的调用中指定的降低</span><br><span class="line"> * </span><br><span class="line"> * @apiNote</span><br><span class="line"> * 即使是不准确的预估通常还是有用，并且计算量小。比如说，一个近似平衡二叉树的子Spliterator可以返回一个值</span><br><span class="line"> * 用以估计元素的数量为其父节点的一半。如果root Spliterator不能保值精确的数量，那么他会估计size为以对应的树结构的深度为指数，2为底数的值</span><br><span class="line"> * 即2^depth</span><br><span class="line"> *</span><br><span class="line"> */</span><br><span class="line">long estimateSize();</span><br></pre></td></tr></table></figure>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/05/Java泛型编程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/05/Java泛型编程/" itemprop="url">Java泛型编程</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-05T12:13:25+08:00">
+                2018-05-05 12:13:25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java基础/" itemprop="url" rel="index">
+                    <span itemprop="name">Java基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="Java-泛型编程"><a href="#Java-泛型编程" class="headerlink" title="Java 泛型编程"></a>Java 泛型编程</h1><p>public static &lt;T,U&gt; T[] copyOf</p>
+<p>泛型，即“参数化类型”</p>
+<p>泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型）</p>
+<h2 id="泛型的使用"><a href="#泛型的使用" class="headerlink" title="泛型的使用"></a>泛型的使用</h2><h3 id="泛型类"><a href="#泛型类" class="headerlink" title="泛型类"></a>泛型类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Generic&lt;T&gt; &#123;</span><br><span class="line">    private T key;</span><br><span class="line"></span><br><span class="line">    public Generic(T key) &#123;</span><br><span class="line">        this.key = key;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public T getKey() &#123;</span><br><span class="line">        return key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>泛型的类型参数只能是类类型，不能是简单类型，如int和Integer</li>
+<li>不能对确切的泛型类型使用instanceof操作。如下操作是非法的，编译时会报错</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if (num instanceof Generic&lt;Number&gt;) &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="泛型接口"><a href="#泛型接口" class="headerlink" title="泛型接口"></a>泛型接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Generator&lt;T&gt; &#123;</span><br><span class="line">    public T next();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong><em>当实现泛型接口的类，未传入泛型实参时</em></strong>:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class FruitGenerator&lt;T&gt; implements Generator&lt;T&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public T next()&#123;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>未传入泛型实参时，与泛型类的定义相同，在声明类的时候，需要将泛型的声明也一起加到类中</p>
+<p><strong><em>当实现泛型接口的类，传入泛型实参时</em></strong>:<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class FruitGenerator implements Generator&lt;String&gt; &#123;</span><br><span class="line">    private String[] fruits = new String[] &#123;&quot;Apple&quot;, &quot;Banana&quot;, &quot;Pear&quot;&#125;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String next() &#123;</span><br><span class="line">        Random rand = new Random();</span><br><span class="line">        return fruits[rand.nextInt(3)];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>传入泛型实参时：</p>
+<p>定义一个生产器实现这个接口，虽然我们只创建了一个泛型接口Generator<t><br><br>但是我们可以为T传入无数个实参，形成无数种类型的Generator接口，<br>在实现类实现泛型接口是，如已将泛型类型传入实参类型，则所有使用泛型的地方都要替换成传入的实参类型</t></p>
+<p>即，Generator<t>, public T next();中的T都要替换成传入的String类型</t></p>
+<h3 id="泛型通配符"><a href="#泛型通配符" class="headerlink" title="泛型通配符"></a>泛型通配符</h3><p>Integer是Number的一个子类</p>
+<p>但是Generic<integer>不能被看作为Generic<number>的子类</number></integer></p>
+<p>同一种泛型可以对应多个版本（因为参数是不确定的），不同版本的泛型类实例是不兼容的</p>
+<p>类型通配符一般是使用?代替具体的类型实参，需要注意的的是，是类型实参，而不是类型形参。此处的?和Number,String,Integer一样都是一种实际的类型，可以?看成所有类型的父类。是一种真实的类型</p>
+<p>该通配符可以解决当具体类型不确定的时候，这个通配符就是?;当操作类型时，不需要使用类型的具体功能时，只使用Object类中的功能。那么可以用?通配符来表未知类型</p>
+<h3 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h3><p><strong><em>泛型类，是在实例化类的时候指明泛型的具体类型;泛型方法，是在调用方法的时候指明泛型的具体类型</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">* 1）public 与返回值中间&lt;T&gt;非常重要，可以理解为声明此方法为泛型方法</span><br><span class="line">* 2）只有生命了&lt;T&gt;的方法才是泛型方法，泛型类中的使用了泛型的成员方法并不是泛型方法</span><br><span class="line">* 3）&lt;T&gt;表明该方法将使用泛型类型T，此时才可以在方法中使用泛型类型T</span><br><span class="line">* 4）与泛型类的定义一样，此处T可以随便写为任意标识，常见的如T,E,K,V等形式的参数常用于表示泛型</span><br><span class="line">*/</span><br><span class="line">public &lt;T&gt; T genericMethod(Class&lt;T&gt; tClass) throws InstantiationException,IllegalAccessException &#123;</span><br><span class="line">    T instance = tClass.newInstance();</span><br><span class="line">    return instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Object obj = genericMethod(Class.forName(&quot;pacakage name&quot;));</span><br></pre></td></tr></table></figure>
+<h4 id="泛型方法的基本用法"><a href="#泛型方法的基本用法" class="headerlink" title="泛型方法的基本用法"></a>泛型方法的基本用法</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">public class GenericeTest &#123;</span><br><span class="line"></span><br><span class="line">    public class Generic&lt;T&gt; &#123;</span><br><span class="line">        private T key;</span><br><span class="line"></span><br><span class="line">        public Generic(T key) &#123;</span><br><span class="line">            this.key = key;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        //虽然在方法中用了泛型，但是这并不是一个泛型方法</span><br><span class="line">        //这只是类中一个普通的成员方法，只不过他的返回值是在声明泛型类已经声明过的泛型</span><br><span class="line">        //所以在这个方法中才可以继续使用T这个泛型</span><br><span class="line">        public T getKey()&#123;</span><br><span class="line">            return key;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * 因为在类的申明中并未声明泛型E，所以在使用E做形参和返回值类型时，编译器无法识别</span><br><span class="line">         * public E setKey(E key) &#123;</span><br><span class="line">             this.key = key;</span><br><span class="line">           &#125;</span><br><span class="line">         */</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 泛型方法，</span><br><span class="line">     * 首先在public与返回值之间的&lt;T&gt;必不可少，这表明这是一个泛型方法，并且声明了一个泛型T</span><br><span class="line">     * 这个T可以出现在这个泛型方法的任意位置</span><br><span class="line">     * 泛型的数量也可以为任意多个</span><br><span class="line">     * public &lt;T, K&gt; K showKeyName(Generic&lt;T&gt; container) &#123;</span><br><span class="line">     *     ...</span><br><span class="line">     * &#125;</span><br><span class="line">     */</span><br><span class="line">    public &lt;T&gt; T showKeyName(Generic&lt;T&gt; container) &#123;</span><br><span class="line">        System.out.println(&quot;container key : &quot; + container.getKey());</span><br><span class="line">        T test = container.getKey();</span><br><span class="line">        return test;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    //不是泛型方法，只是一个普通的方法，只是使用了Generic&lt;Number&gt;这个泛型类做形参而已</span><br><span class="line">    public void showKeyValue1(Generic&lt;Number&gt; obj) &#123;</span><br><span class="line">        System.out.println(&quot;key value is &quot; + obj.getKey());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    //不是泛型方法，这也是一个普通的方法，只不过使用了泛型通配符?</span><br><span class="line">    //?是一种类型实参，可以看做为Number等所有类的父类</span><br><span class="line">    public void showKeyValue2(Generic&lt;?&gt; obj) &#123;</span><br><span class="line">        System.out.println(&quot;key value is &quot; + obj.getKey());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="类中的泛型方法"><a href="#类中的泛型方法" class="headerlink" title="类中的泛型方法"></a>类中的泛型方法</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class GenericeTest&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">    public void show1(T t) &#123;</span><br><span class="line">        System.out.println(t.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //在泛型类中声明了一个泛型方法，使用泛型E,这种泛型可以为任意类型。可以类型与T相同，也可以不同</span><br><span class="line">    //由于泛型方法在声明的时候会声明泛型&lt;E&gt;,因此即使在泛型类中并未声明泛型，编译器也能够正确识别泛型方法中的泛型</span><br><span class="line">    public &lt;E&gt; void show3(E t) &#123;</span><br><span class="line">        System.out.println(t.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 在泛型类中声明了一个泛型方法，使用泛型T，注意这个T是一种全新的类型，可以与泛型类中声明的T不是同一种类型</span><br><span class="line">     */</span><br><span class="line">    public &lt;T&gt; void show2(T t) &#123;</span><br><span class="line">        System.out.println(t.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="泛型方法与可变参数"><a href="#泛型方法与可变参数" class="headerlink" title="泛型方法与可变参数"></a>泛型方法与可变参数</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public &lt;T&gt; void printMsg(T... args) &#123;</span><br><span class="line">    for (T t : args) &#123;</span><br><span class="line">        System.out.println(&quot;t is &quot; + t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">printMsg(&quot;111&quot;, 222, &quot;aaaa&quot;, &quot;123.3&quot;,55.55)</span><br></pre></td></tr></table></figure>
+<h4 id="静态方法与泛型"><a href="#静态方法与泛型" class="headerlink" title="静态方法与泛型"></a>静态方法与泛型</h4><p>静态方法有一种情况需要注意下，那就是在类中的静态方法使用泛型：<strong><em>静态方法无法访问类上定义的泛型；如果静态反复的操作的引用数据类型不确定的时候，必须要将泛型定义在方法上</em></strong></p>
+<p>即：<strong><em>如果静态方法要使用泛型的话，必须将静态方法也定义成泛型方法</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class StaticGenerator&lt;T&gt; &#123;</span><br><span class="line">    /**</span><br><span class="line">     * 如果在类中定义使用泛型的静态方法，需要添加额外的泛型声明（将这个方法定义成泛型方法）</span><br><span class="line">     * 即使静态方法要使用泛型类中已经声明过的泛型也不可以</span><br><span class="line">     * public static void show(T t) &#123;...&#125;, 编译器会报错</span><br><span class="line">     */</span><br><span class="line">    public static &lt;T&gt; void show(T t) &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>无论何时，如果你能做到，你就该尽量使用泛型方法，也就是说，如果使用泛型方法将整个类泛型话，那么就应该使用泛型方法。另外对于一个static的方法而言，无法访问泛型类型参数。所以如果static方法要使用泛型能力，就必须使其成为泛型方法</p>
+</blockquote>
+<h3 id="泛型上下边界"><a href="#泛型上下边界" class="headerlink" title="泛型上下边界"></a>泛型上下边界</h3><p>在使用泛型的时候，我们还可以为传入的泛型类型实参进行上下边界的限制，如：类型实参只准传入某种类型的父类或某种类型的子类</p>
+<p>为泛型添加上边界，即传入的类型实参必须是指定类型的子类型<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public void showKeyValue(Generic&lt;? extends Number&gt; obj) &#123;</span><br><span class="line">    System.out.println(&quot;key value is &quot; + obj.getKey());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>同时修改泛型类的定义</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Generic&lt;T extends Number&gt; &#123;</span><br><span class="line">    private T key;</span><br><span class="line"></span><br><span class="line">    public Generic(T key) &#123;</span><br><span class="line">        this.key = key;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public T getKey() &#123;</span><br><span class="line">        return key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在泛型方法中添加上下边界限制的时候，必须在权限声明与返回值之间的<t>上添加上下边界，即在泛型声明的时候添加，如下</t></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public &lt;T extends Number&gt; T showKeyName(Generic&lt;T&gt; container) &#123;</span><br><span class="line">    System.out.println(&quot;container key :&quot; + container.getKey());</span><br><span class="line">    T test = container.getKey();</span><br><span class="line">    return test;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="泛型的上下界"><a href="#泛型的上下界" class="headerlink" title="泛型的上下界"></a>泛型的上下界</h2><h3 id="上界-extends"><a href="#上界-extends" class="headerlink" title="上界 extends"></a>上界 extends</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;? extends T&gt;表示类型的上界， 表示参数化的类型可能是指定的类型或者是此类型的子类</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/extends.jpg" alt="super.jpg"></p>
+<h3 id="下界-super"><a href="#下界-super" class="headerlink" title="下界 super"></a>下界 super</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;? super T&gt;表示类型的下界， 表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直到Object</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/super.jpg" alt="super.jpg"></p>
+<p><br></p>
+<p>参考：</p>
+<p><a href="https://blog.csdn.net/s10461/article/details/53941091" target="_blank" rel="noopener">https://blog.csdn.net/s10461/article/details/53941091</a></p>
+<p><a href="https://www.zhihu.com/question/20400700/answer/117464182" target="_blank" rel="noopener">https://www.zhihu.com/question/20400700/answer/117464182</a></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/05/ArrayList源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/05/05/ArrayList源码阅读/" itemprop="url">ArrayList源码阅读</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-05T11:46:28+08:00">
+                2018-05-05 11:46:28
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java基础/" itemprop="url" rel="index">
+                    <span itemprop="name">Java基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="ArrayList源码阅读"><a href="#ArrayList源码阅读" class="headerlink" title="ArrayList源码阅读"></a>ArrayList源码阅读</h1><p>Arrays.copyOf(U[] original, int newLength, Class&lt;? extends T[]&gt; newType)是一个泛型方法</p>
+<p>复制某个特定的数组，如果有必要的话，擦除或者以null填充，以保证这个copy的副本有<br>指定的长度。<br>因为原始的数组和它的副本上对应的索引都是有效的，这两个数组会含有相同的值。<br>对于任意的在副本里而不在原始的数组里面的索引有效位置的值，副本会包含null。<br>这样的索引值仅仅会在该副本的长度大于原始的长度</p>
+<p>首先静态泛型方法<br>public static &lt;T,U&gt; T[] copyOf(U[] original, int newLength, Class&lt;? extends T[]&gt; newType) </p>
+<p>声明了有两个泛型T，U</p>
+<p>T是原始的数组；U是返回的数组</p>
+<p>newType是这个副本的类，其传入的类型是Class,</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">T[] copy = ((Object)newType == (Object)Object[].class)</span><br><span class="line">            ? (T[]) new Object[newLength]</span><br><span class="line">            : (T[]) Array.newInstance(newType.getComponentType(), newLength);</span><br></pre></td></tr></table></figure>
+<p>在此之前先说明下Java的对象模型：</p>
+<blockquote>
+<p>1.所有的类都是Class类的实例，Object是类，那么Object也是Class类的一个实例<br>2.所有的类都最终继承自Object类，Class是类，那么Class也继承自Object</p>
+</blockquote>
+<p>第一个假设是错误的：java.lang.Object是一个Java类,但并不是java.lang.Class的一个实例。后者只是一个用于描述Java类与接口，用于支持反射操作的类型</p>
+<p>第二个假设是对的：java.lang.Class是java.lang.Object的派生类，前者继承自后者</p>
+<p>以下by <a href="https://stackoverflow.com/questions/29494800/do-not-understand-the-source-code-of-arrays-copyof" target="_blank" rel="noopener">https://stackoverflow.com/questions/29494800/do-not-understand-the-source-code-of-arrays-copyof</a></p>
+<p>看下这句话<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">(Object)newType == (Object)Object[].class)</span><br></pre></td></tr></table></figure></p>
+<p>这一行在检查什么呢？</p>
+<p>在检查是否相同</p>
+<p>why？</p>
+<p>这个特殊的强制类型转换是必须的，因为Class&lt;Object[]&gt; (object[].class的类型)和Class&lt;? extends T[]&gt;不是可以兼容的类型。简单来说，对于一个通过==判断相等的比较，两边中的任意一边必须是另外一边的子类型或者父类型</p>
+<p>尽管object[]是所有的object数组的父类，但是Class&lt;Object[]&gt; 不是Class&lt;？ extends T[]&gt;的父类型。<br>原因在于没有通配符，Java泛型是不变的（Java generics are invariant）</p>
+<p>简化下代码运行看下结果</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Test</span><br><span class="line">public void testGeneric()&#123;</span><br><span class="line">    if (isE(Object[].class)) &#123;</span><br><span class="line">        System.out.println(&quot;eq&quot;);</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        System.out.println(&quot;neq&quot;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public static &lt;T&gt; boolean isE(Class&lt;? extends T[]&gt; newType) &#123;</span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    boolean copy = (newType == Object[].class);</span><br><span class="line">    return copy;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>会报出如下错误<br>Error:(154, 33) java: 不可比较的类型: java.lang.Class&lt;capture#1, 共 ? extends T[]&gt;和java.lang.Class&lt;java.lang.Object[]&gt;</p>
+<p>上面可以看出来，Class&lt;Object[]&gt;和Class&lt;？ extends T[]&gt;不能做比较</p>
+<p>这时候把那段代码对应部分改成如下形式</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">newType == (Class&lt;? extends Object[]&gt;)Object[].class</span><br></pre></td></tr></table></figure>
+<p>最后输出的结果是eq</p>
+<p>OK，然后看下一段代码，当等式不再满足条件的时候，这时候调用Array.newInstance(newType.getComponentType(), newLength)通过反射得到</p>
+<p>newType.getComponentType()</p>
+<p>看下jdk的注解</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">     * Returns the &#123;@code Class&#125; representing the component type of an</span><br><span class="line">     * array.  If this class does not represent an array class this method</span><br><span class="line">     * returns null.</span><br><span class="line">     *</span><br><span class="line">     * @return the &#123;@code Class&#125; representing the component type of this</span><br><span class="line">     * class if this class is an array</span><br><span class="line">     * @see     java.lang.reflect.Array</span><br><span class="line">     * @since JDK1.1</span><br><span class="line">     */</span><br><span class="line">    public native Class&lt;?&gt; getComponentType();</span><br></pre></td></tr></table></figure>
+<p>是一个native的方法，返回class对象的类型</p>
+<p>再看newInstance的实现方法</p>
+<p>调用到最后也是一个native方法</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Creates a new array with the specified component type and</span><br><span class="line"> * length.</span><br><span class="line"> * Invoking this method is equivalent to creating an array</span><br><span class="line"> */</span><br><span class="line">private static native Object newArray(Class&lt;?&gt; componentType, int length) throws NegativeArraySizeException;</span><br></pre></td></tr></table></figure>
+<p>两种创建数组的方法，一种是以正常的方式创建（new Object[]），一种是以反射的方式动态的创建（Array.newInstance）</p>
+<p>通常来说，使用反射创建的实例都会比较慢一点</p>
+<p>官方文档这样的说</p>
+<blockquote>
+<p>Because reflection involves types that are dynamically resolved, certain Java virtual machine optimizations can not be performed. Consequently, reflective operations have slower performance than their non-reflective counterparts, and should be avoided in sections of code which are called frequently in performance-sensitive applications.</p>
+</blockquote>
+<p>但是实际上差距copyOf里面的两种实现方式差距的微乎其微</p>
+<p>然后下一段代码</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">System.arraycopy(original, 0, copy, 0,Math.min(original.length, newLength));</span><br></pre></td></tr></table></figure>
+<p>这个没有什么说的，直接查看调用是一个native的方法</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * If the &lt;code&gt;src&lt;/code&gt; and &lt;code&gt;dest&lt;/code&gt; arguments refer to the</span><br><span class="line"> * same array object, then the copying is performed as if the</span><br><span class="line"> * components at positions &lt;code&gt;srcPos&lt;/code&gt; through</span><br><span class="line"> * &lt;code&gt;srcPos+length-1&lt;/code&gt; were first copied to a temporary</span><br><span class="line"> * array with &lt;code&gt;length&lt;/code&gt; components and then the contents of</span><br><span class="line"> * the temporary array were copied into positions</span><br><span class="line"> * &lt;code&gt;destPos&lt;/code&gt; through &lt;code&gt;destPos+length-1&lt;/code&gt; of the</span><br><span class="line"> * destination array.</span><br><span class="line"> */</span><br><span class="line">public static native void arraycopy(Object src,  int  srcPos,Object dest, int destPos, int length);</span><br></pre></td></tr></table></figure>
+<p>上面那段注释表示，如果src和dest是指代同一个数组，那么这个拷贝的副本从源开始位置srcPos，一直到源结束位置srcPos+length+1，会先拷贝出一个临时的数组，然后这个临时的copy将会放入dest对应的位置</p>
+<p>转回ArrayList源码，看下一个方法trimToSize()</p>
+<p>该方法是来调整ArrayList实例到其list该有的长度，使用者可以调用这个方法来减少ArrayList实例的存储大小</p>
+<p>实现方式如下</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public void trimToSize() &#123;</span><br><span class="line">       modCount++;</span><br><span class="line">       if (size &lt; elementData.length) &#123;</span><br><span class="line">           elementData = (size == 0)</span><br><span class="line">                   ? EMPTY_ELEMENTDATA</span><br><span class="line">                   : Arrays.copyOf(elementData, size);</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+<p>如果这个时候数组大小已经为空了，那么直接赋值个空数组，若不为空，则调用Arrays.copyOf反射产生一个调整好长度的数组</p>
+<h3 id="ArrayList-数组增长策略"><a href="#ArrayList-数组增长策略" class="headerlink" title="ArrayList 数组增长策略"></a>ArrayList 数组增长策略</h3><p>首先判断是否最小容量需求都大于当前数组元素的长度</p>
+<p>如果有则调用grow方法完成数组扩容</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Increases the capacity to ensure that it can hold at least the</span><br><span class="line"> * number of elements specified by the minimum capacity argument.</span><br><span class="line"> *</span><br><span class="line"> * @param minCapacity the desired minimum capacity</span><br><span class="line"> */</span><br><span class="line">private void grow(int minCapacity) &#123;</span><br><span class="line">    // overflow-conscious code</span><br><span class="line">    int oldCapacity = elementData.length;</span><br><span class="line">    int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1);</span><br><span class="line">    if (newCapacity - minCapacity &lt; 0)</span><br><span class="line">        newCapacity = minCapacity;</span><br><span class="line">    if (newCapacity - MAX_ARRAY_SIZE &gt; 0)</span><br><span class="line">        newCapacity = hugeCapacity(minCapacity);</span><br><span class="line">    // minCapacity is usually close to size, so this is a win:</span><br><span class="line">    elementData = Arrays.copyOf(elementData, newCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先以原长度的1.5进行扩容，如果大小还是满足不了最小需求minCapacity的容量，那么新的容量就直接为minCapacity，如果这时候，增长大小完成的newCapacity比默认最大还大（2^31-8），会调用hugeCapacity的抛出异常或者得到最新的长度，最后调用Arrays.copyOf完成赋值</p>
+<p>public Object[] toArray() 这个操作一定会分配新的内存</p>
+<p>public E set(int index, E element) 有返回值，返回值为以前的值oldValue</p>
+<p>modCount —-&gt; ArrayList<e> extends AbstractList<e> 记录这个list被修改了多少次结构,结构性修改是指那些改变了列表的结构，或者其他扰乱的方式，即正在进行的迭代会产生不正确的结果</e></e></p>
+<p>这个字段是由迭代来使用的。如果这个字段的值被改变了，在调用add, set, next, remove, previous的时候，那么这个迭代会抛出一个ConcurrentModificationException异常。这个字段主要是提供了一个快速失败的的行为，而不是在迭代期间面对并发修改中的不确定的行为。</p>
+<p>在子类中可以选择使用这个字段（modCount），如果子类希望去提供快速失败的功能，那么仅仅需要去增加这个字段的值就行了（在 add, remove,和其他任何有对这个list有结构性的修改）</p>
+<p>每次的remove操作都是一次System.arraycopy的操作，然后会把对应位置置为null，然后让GC进行处理</p>
+<p>addAll(Collection&lt;? extends E&gt; c) 这个api，可以接受所有的继承了Collection的对象（每个都必须实现toArray的方法），然后将所有元素添加进ArrayList里面</p>
+<p>retainAll和removeAll都是最后调用了batchRemove(Collection&lt;?&gt; c, boolean complement)，只是一个参数是true，一个是false</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private boolean batchRemove(Collection&lt;?&gt; c, boolean complement) &#123;</span><br><span class="line">    final Object[] elementData = this.elementData;</span><br><span class="line">    int r = 0, w = 0;</span><br><span class="line">    boolean modified = false;</span><br><span class="line">    try &#123;</span><br><span class="line">        for (; r &lt; size; r++)</span><br><span class="line">            if (c.contains(elementData[r]) == complement)</span><br><span class="line">                elementData[w++] = elementData[r];</span><br><span class="line">    &#125; finally &#123;</span><br><span class="line">        // Preserve behavioral compatibility with AbstractCollection,</span><br><span class="line">        // even if c.contains() throws.</span><br><span class="line">        if (r != size) &#123;</span><br><span class="line">            System.arraycopy(elementData, r,</span><br><span class="line">                             elementData, w,</span><br><span class="line">                             size - r);</span><br><span class="line">            w += size - r;</span><br><span class="line">        &#125;</span><br><span class="line">        if (w != size) &#123;</span><br><span class="line">            // clear to let GC do its work</span><br><span class="line">            for (int i = w; i &lt; size; i++)</span><br><span class="line">                elementData[i] = null;</span><br><span class="line">            modCount += size - w;</span><br><span class="line">            size = w;</span><br><span class="line">            modified = true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return modified;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>当removeAll调用这个函数的时候，传入的参数为false，表明要查找该list里面不含c里面的元素，同时复制出来</p>
+<p>当retainAll调用这个函数的时候，传入的参数为true，表明要找出该list有，c也有的元素，然后重新赋值</p>
+<h3 id="ArrayList的内部类"><a href="#ArrayList的内部类" class="headerlink" title="ArrayList的内部类"></a>ArrayList的内部类</h3><h4 id="Itr"><a href="#Itr" class="headerlink" title="Itr"></a>Itr</h4><p>Itr 实现了Iterator， 是AbstractList.Itr的优化版本</p>
+<p>public E next() 为迭代器内部实现，主要通过一个内部cursor来完成遍历元素</p>
+<p>public void remove() 主要是调用ArrayList内部的remove方式实现remove，同时修改cursor等游标</p>
+<h4 id="Consumer和Predicate-—-Java-8-函数式接口"><a href="#Consumer和Predicate-—-Java-8-函数式接口" class="headerlink" title="Consumer和Predicate — Java 8 函数式接口"></a>Consumer和Predicate — Java 8 函数式接口</h4><h5 id="Predicate"><a href="#Predicate" class="headerlink" title="Predicate"></a>Predicate</h5><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Represents a predicate (boolean-valued function) of one argument.</span><br><span class="line"> *</span><br><span class="line"> * &lt;p&gt;This is a &lt;a href=&quot;package-summary.html&quot;&gt;functional interface&lt;/a&gt;</span><br><span class="line"> * whose functional method is &#123;@link #test(Object)&#125;.</span><br><span class="line"> *</span><br><span class="line"> * @param &lt;T&gt; the type of the input to the predicate</span><br><span class="line"> *</span><br><span class="line"> * @since 1.8</span><br><span class="line"> */</span><br><span class="line"> @FunctionalInterface</span><br><span class="line">public interface Predicate&lt;T&gt;</span><br></pre></td></tr></table></figure>
+<p>Predicate功能判断输入的对象是否符合某个条件</p>
+<p>测试代码<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Test</span><br><span class="line">public void testPredicate()&#123;</span><br><span class="line">    Predicate&lt;Integer&gt; boolValue = x -&gt; x &gt; 5;</span><br><span class="line">    Predicate&lt;Integer&gt; t2 = x -&gt; x &gt; 10;</span><br><span class="line">    System.out.println(boolValue.test(1));</span><br><span class="line">    System.out.println(boolValue.test(6));</span><br><span class="line"></span><br><span class="line">    //and</span><br><span class="line">    Predicate&lt;Integer&gt; t3 = boolValue.and(t2);//返回一个and条件</span><br><span class="line">    System.out.println(t3.test(6));//false 6&gt; 5 &amp;&amp; 6&lt;10</span><br><span class="line">    System.out.println(t3.test(11));//true 11&gt;5 &amp;&amp; 11&gt; 10</span><br><span class="line"></span><br><span class="line">    //negate</span><br><span class="line">    Predicate&lt;Integer&gt; t4 = t3.negate();</span><br><span class="line">    System.out.println(t4.test(6));// true !(x&gt; 5 &amp;&amp; x&gt;10) 6</span><br><span class="line">    System.out.println(t4.test(11));//false !(x&gt; 5 &amp;&amp; x&gt;10) 11</span><br><span class="line"></span><br><span class="line">    //or</span><br><span class="line">    Predicate&lt;Integer&gt; t5 = boolValue.or(t2);</span><br><span class="line">    System.out.println(t5.test(4));//false x&gt;5 || x&gt;10</span><br><span class="line">    System.out.println(t5.test(6));//true x&gt;5 || x&gt;10</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h5 id="Consumer"><a href="#Consumer" class="headerlink" title="Consumer"></a>Consumer</h5><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Represents an operation that accepts a single input argument and returns no</span><br><span class="line"> * result. Unlike most other functional interfaces, &#123;@code Consumer&#125; is expected</span><br><span class="line"> * to operate via side-effects.</span><br><span class="line"> *</span><br><span class="line"> * &lt;p&gt;This is a &lt;a href=&quot;package-summary.html&quot;&gt;functional interface&lt;/a&gt;</span><br><span class="line"> * whose functional method is &#123;@link #accept(Object)&#125;.</span><br><span class="line"> *</span><br><span class="line"> * @param &lt;T&gt; the type of the input to the operation</span><br><span class="line"> *</span><br><span class="line"> * @since 1.8</span><br><span class="line"> */</span><br><span class="line">@FunctionalInterface</span><br><span class="line">public interface Consumer&lt;T&gt;</span><br></pre></td></tr></table></figure>
+<p>代表一个接受单个输入参数并且没有返回值的操作</p>
+<p>Consumer使用了Java8接口新特性—-接口默认方法（default）</p>
+<p>测试样例</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">@Test</span><br><span class="line">public void testConsumer() &#123;</span><br><span class="line">    User user = new User();</span><br><span class="line">    user.setNam</span><br><span class="line">    e(&quot;morning&quot;);</span><br><span class="line">    Consumer&lt;User&gt; userConsumer = user1 -&gt; user1.setName(&quot;star&quot;);</span><br><span class="line">    userConsumer.accept(user);</span><br><span class="line">    System.out.println(user.getName());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">class User &#123;</span><br><span class="line">    String name;</span><br><span class="line"></span><br><span class="line">    void setName(String name) &#123;</span><br><span class="line">        this.name = name;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    String getName() &#123;</span><br><span class="line">        return name;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>然后转回来看内部类Itr forEachRemaining(Consumer&lt;? super E&gt; consumer)</p>
+<h4 id="ListItr"><a href="#ListItr" class="headerlink" title="ListItr"></a>ListItr</h4><p>ListStr 继承 Itr ，实现了ListIterator</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/04/22/Copy On Write的理解/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1206,7 +1826,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">9</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1228,7 +1848,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">5</span>
+                  <span class="site-state-item-count">6</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>

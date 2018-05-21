@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="JDK源码阅读," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="LinkedList源码阅读继承List和Deque接口实现的一个双向链表。实现了所有的list的操作，能操作包含null的所有元素 所有的操作的执行都可以看做是一个双向链表。对链表索引的操作都会从头或者尾开始遍历，以最接近指定的索引位置为准 注意这些实现不是synchronized，如果多线程需要同时并发的访问这个链表，并且至少有一个线程会修改这个list的结构，那么最后一定要保证是同步的。通常">
+<meta name="keywords" content="JDK源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="LinkedList源码阅读">
+<meta property="og:url" content="http://yoursite.com/2018/05/22/LinkedList源码阅读/index.html">
+<meta property="og:site_name" content="ShallWei Zeng">
+<meta property="og:description" content="LinkedList源码阅读继承List和Deque接口实现的一个双向链表。实现了所有的list的操作，能操作包含null的所有元素 所有的操作的执行都可以看做是一个双向链表。对链表索引的操作都会从头或者尾开始遍历，以最接近指定的索引位置为准 注意这些实现不是synchronized，如果多线程需要同时并发的访问这个链表，并且至少有一个线程会修改这个list的结构，那么最后一定要保证是同步的。通常">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-05-21T16:03:59.850Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="LinkedList源码阅读">
+<meta name="twitter:description" content="LinkedList源码阅读继承List和Deque接口实现的一个双向链表。实现了所有的list的操作，能操作包含null的所有元素 所有的操作的执行都可以看做是一个双向链表。对链表索引的操作都会从头或者尾开始遍历，以最接近指定的索引位置为准 注意这些实现不是synchronized，如果多线程需要同时并发的访问这个链表，并且至少有一个线程会修改这个list的结构，那么最后一定要保证是同步的。通常">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/05/22/LinkedList源码阅读/"/>
+
+
+
+
+
+  <title>LinkedList源码阅读 | ShallWei Zeng</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ShallWei Zeng</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/22/LinkedList源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">LinkedList源码阅读</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-22T00:01:49+08:00">
+                2018-05-22 00:01:49
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java基础/" itemprop="url" rel="index">
+                    <span itemprop="name">Java基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="LinkedList源码阅读"><a href="#LinkedList源码阅读" class="headerlink" title="LinkedList源码阅读"></a>LinkedList源码阅读</h1><p>继承List和Deque接口实现的一个双向链表。实现了所有的list的操作，能操作包含null的所有元素</p>
+<p>所有的操作的执行都可以看做是一个双向链表。对链表索引的操作都会从头或者尾开始遍历，以最接近指定的索引位置为准</p>
+<p>注意这些实现不是synchronized，如果多线程需要同时并发的访问这个链表，并且至少有一个线程会修改这个list的结构，那么最后一定要保证是同步的。通常来说是用synchronize某个对象完成，也即是同步代码块，并且也是包裹住整个list</p>
+<p>如果list没有对象存在，这个list应该被Collections.synchronizedList来进行修饰。这个最好在创建的时候来处理，以防止异步的操作访问了这个list，: List list = Collections.synchronizedList(new LinkedList())</p>
+<h2 id="整体结构"><a href="#整体结构" class="headerlink" title="整体结构"></a>整体结构</h2><p>//TODO 添加结构图</p>
+<p>继承了AbstractSequentialList,实现了List， Deque，Cloneable，java.io.Serializable</p>
+<p>两种构造方法</p>
+<p>public LinkedList() 建一个空的列表</p>
+<p>public LinkedList(Collection&lt;? extends E&gt; c) 里面先建一个空的列表，然后将元素添加进这个列表</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public LinkedList(Collection&lt;? extends E&gt; c) &#123;</span><br><span class="line">    this();</span><br><span class="line">    addAll(c);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>addAll方法<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">addAll(int index, Collection&lt;? extends E&gt; c)</span><br></pre></td></tr></table></figure></p>
+<p>内部采用内部类Node来表示每个插入进来的元素</p>
+<p>Node内部类</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private static class Node&lt;E&gt; &#123;</span><br><span class="line">    E item;</span><br><span class="line">    Node&lt;E&gt; next;</span><br><span class="line">    Node&lt;E&gt; prev;</span><br><span class="line"></span><br><span class="line">    Node(Node&lt;E&gt; prev, E element, Node&lt;E&gt; next) &#123;</span><br><span class="line">        this.item = element;</span><br><span class="line">        this.next = next;</span><br><span class="line">        this.prev = prev;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>先看下这段代码<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if (index == size) &#123;</span><br><span class="line">    succ = null;</span><br><span class="line">    pred = last;</span><br><span class="line">&#125; else &#123;</span><br><span class="line">    succ = node(index);</span><br><span class="line">    pred = succ.prev;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>会首先判断下添加位置的索引是否在最后一个，如果是则代表在原先的基础上的后面加上这个Collection的元素，如果不是的话，会找到对应的位置然后进行进入插入，相当于链表的数据中间插了一段数据</p>
+<p>linkFirst方法</p>
+<p>该方法是用来向头部插入一个元素，该方法是一个private，代表只能在类内部使用</p>
+<p>linkLast方法</p>
+<p>对应的， 该方法使用来在链表的最后的节点添加一个节点，只能在包内使用，也即是外部无法调用</p>
+<p>linkBefore</p>
+<p>插入一个节点到非空的后继上（succ）</p>
+<p>unlinkFirst</p>
+<p>将第一个非空的节点从列表中移除，将值设置为null，有助于GC</p>
+<p>unlinkLast</p>
+<p>将最后一个非空节点从列表中移除，方法也就是将链表中最后一个节点设置为null，上一个节点的后继也设置为null</p>
+<p>unlink </p>
+<p>移除一个非空节点</p>
+<p>getFirst, getLast</p>
+<p>分别获取头节点和尾节点</p>
+<p>contains</p>
+<p>判断是否包含某个节点， 通过调用indexOf实现，其内部查找逻辑是以查找节点是否为空分类讨论，都是从头到尾遍历链表，只是比较相等的方法不一样；如果传入的节点是null，那么判断的依据就是判断是否为null；如果不为null，则用equals进行判断</p>
+<p>remove</p>
+<p>与indexOf里面的实现方法类似，以判断是否为null，从头到尾遍历链表，找到之后从链表中移除unlink</p>
+<p>lastIndexOf</p>
+<p>返回一个最后与传入节点相等的索引位置</p>
+<p>peek</p>
+<p>取出链表中的头结点， 但不从链表中移除</p>
+<p>poll</p>
+<p>取出链表中的头结点，并移除</p>
+<p>offer</p>
+<p>添加一个节点到链表的最后位置</p>
+<p>offerFirst</p>
+<p>添加一个节点到链表的头结点，成为新的头结点</p>
+<p>push</p>
+<p>添加一个节点到链表头结点</p>
+<p>pop</p>
+<p>移除第一个节点</p>
+<p>内部类ListItr 继承ListIterator</p>
+<p>主要实现了迭代器的一些功能 hasNext, next, hasPrevious, previous, nextindex， previousIndex， set, add, forEachRemaining</p>
+<p>listIterator</p>
+<p>返回<strong>一个</strong>列表元素的迭代器list-iterator（具体的理解是，以当前节点的位置开始的游标），这个list-iterator是一个快速失败（的机制）：如果这个链表的结构在这个iterator被创建后的任意时间被修改，则这个iterator会抛出一个异常。返回的是一个对象，对象是个内部类ListStr，由父类ListIterator接受它。</p>
+<p>内部类DescendingIterator 继承Iterator</p>
+<p>一个提供从后往前遍历的迭代器（iterator），该iterator内部使用了ListStr来完成从后往前的功能</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">private class DescendingIterator implements Iterator&lt;E&gt; &#123;</span><br><span class="line">    private final ListItr itr = new ListItr(size());</span><br><span class="line">    public boolean hasNext() &#123;</span><br><span class="line">        return itr.hasPrevious();</span><br><span class="line">    &#125;</span><br><span class="line">    public E next() &#123;</span><br><span class="line">        return itr.previous();</span><br><span class="line">    &#125;</span><br><span class="line">    public void remove() &#123;</span><br><span class="line">        itr.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>内部类LLSpliterator  继承Spliterator</p>
+<p>先说明一下Spliterator</p>
+<h2 id="Spliterator"><a href="#Spliterator" class="headerlink" title="Spliterator"></a>Spliterator</h2><p>Spliterator是自jdk1.8以来的新加入的一个类</p>
+<p>是一个遍历和分割源的对象。一些元素的源可以由Spliterator修饰，比如一个数组，一个Collection下的对象，一个IO Channel， 又或者一个通用的方法</p>
+<p>一个Spliterator可以独自遍历这些元素又或者按批量遍历这些元素。Spliterator可能会分出一些自己的元素称为另外一个Spliterator，被用于可能的并行的操作。一些使用Spliterator但是却又不能split的操作，又或者这些操作会有比较高的代价，都是大概率不会从并行流里面收益。遍历或者分开都会使这些元素“exhaust”(翻译不出来)；每个Spliterator仅适用单个批量操作</p>
+<p>一个Spliterator同样也有一系列的特点结构，源和元素。（</p><p>A Spliterator also reports a set of {@link #characteristics()} of its structure, source, and elements from among {@link #ORDERED {@link #DISTINCT}, {@link #SORTED}, {@link #SIZED}, {@link #NONNULL}, {@link #IMMUTABLE}, {@link #CONCURRENT}, and {@link #SUBSIZED}）。举个例子，一个Collection下的Spliterator会拥有size，一个Set下的Spliterator会拥有DISTNCT，和一个SortedSet下的Spliterator会拥有SORTED。这些特点会被合并到一个bit集合里</p>
+<p>一些特点（Characteristics）会额外的限制方法本身；举个例子如果有ORDERED这个特点，遍历方法一定会符合记录的顺序。新的特点可能会在未来被定义，所以具体的实现这个Spliterator的不应该给未列出的值赋予意义</p>
+<p>下面说明每个接口的意思</p>
+<h3 id="tryAdvance"><a href="#tryAdvance" class="headerlink" title="tryAdvance"></a>tryAdvance</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * If a remaining element exists, performs the given action on it,</span><br><span class="line"> * returning &#123;@code true&#125;; else returns &#123;@code false&#125;.  If this</span><br><span class="line"> * Spliterator is &#123;@link #ORDERED&#125; the action is performed on the</span><br><span class="line"> * next element in encounter order.  Exceptions thrown by the</span><br><span class="line"> * action are relayed to the caller.</span><br><span class="line"> *</span><br><span class="line"> * @param action The action</span><br><span class="line"> * @return &#123;@code false&#125; if no remaining elements existed</span><br><span class="line"> * upon entry to this method, else &#123;@code true&#125;.</span><br><span class="line"> * @throws NullPointerException if the specified action is null</span><br><span class="line"> */</span><br><span class="line">boolean tryAdvance(Consumer&lt;? super T&gt; action);</span><br></pre></td></tr></table></figure>
+<p>如果剩余的元素存在，执行这个给定的操作（action）返回true，否则返回false，如果这Spliterator是ORDERED的，这个操作就是在按顺序的下一个元素执行的，操作抛出的异常与调用者有关</p>
+<h3 id="forEachRemaining"><a href="#forEachRemaining" class="headerlink" title="forEachRemaining"></a>forEachRemaining</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Performs the given action for each remaining element, sequentially in</span><br><span class="line"> * the current thread, until all elements have been processed or the action</span><br><span class="line"> * throws an exception.  If this Spliterator is &#123;@link #ORDERED&#125;, actions</span><br><span class="line"> * are performed in encounter order.  Exceptions thrown by the action</span><br><span class="line"> * are relayed to the caller.</span><br><span class="line"> *</span><br><span class="line"> * @implSpec</span><br><span class="line"> * The default implementation repeatedly invokes &#123;@link #tryAdvance&#125; until</span><br><span class="line"> * it returns &#123;@code false&#125;.  It should be overridden whenever possible.</span><br><span class="line"> *</span><br><span class="line"> * @param action The action</span><br><span class="line"> * @throws NullPointerException if the specified action is null</span><br><span class="line"> */</span><br><span class="line">default void forEachRemaining(Consumer&lt;? super T&gt; action) &#123;</span><br><span class="line">    do &#123; &#125; while (tryAdvance(action));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>对每个剩下的元素执行action，顺序的在当前线程执行，直到所有的元素都被处理了或者action抛出了异常。如果这个Spliterator是ORDERED的，这个action将会被顺序执行。同样的，抛出的异常与调用者有关。</p>
+<p>默认的实现重复的调用tryAdvance知道其返回错误。这个应该被重写覆盖</p>
+<h3 id="trySplit"><a href="#trySplit" class="headerlink" title="trySplit"></a>trySplit</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 如果这个Spliterator能够被分解，则返回一个Spliterator，包含着元素</span><br><span class="line"> * 并且不会被当前的Spliterator覆盖</span><br><span class="line"> *</span><br><span class="line"> *  如果这个Spliterator是ORDERED，</span><br><span class="line"> * 这个返回的Spliterator中的每个元素必须覆盖有一个严格的前缀</span><br><span class="line"> *</span><br><span class="line"> * 除非这个Spliterator含有无限的元素，那么重复的调用trySplit必须最终会返回一个null</span><br><span class="line"> * 在非空返回时：在分割之前为estimateSize报告的值，必须在分割之后返回的Spliterator的estimateSize的大或者等于。</span><br><span class="line"> * 如果这个Spliterator是SUBSIZED，那么该Spliterator的estimateSize必须等于分割之后返回后的Spliterator的estimateSize之和</span><br><span class="line"> * </span><br><span class="line"> * 这个方法可能会返回null，因为这些原因：空，在遍历开始之后不能进行切割，数据结构约束，效率的考虑</span><br><span class="line"> *</span><br><span class="line"> * @apiNote</span><br><span class="line"> * 理想的trySplit方法（无需遍历）有会有效的以恰好一半的方式分开其元素，运行平衡的并行计算</span><br><span class="line"> * 许多理想的分离策略有很高的效率。比如，只是近似的分裂近似平衡的树，又或者其树结构为叶子要不只有含有一个或者两个，</span><br><span class="line"> * 不能再继续分割这些节点了。然而，平衡的大偏差或者过低的效率机制（trySplit）都会导致差的并行性能</span><br><span class="line"> * </span><br><span class="line"> */</span><br><span class="line">Spliterator&lt;T&gt; trySplit();</span><br></pre></td></tr></table></figure>
+<h3 id="estimateSize"><a href="#estimateSize" class="headerlink" title="estimateSize"></a>estimateSize</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * 返回一个forEachRemaining遍历可能会花费的元素的数量，</span><br><span class="line"> * 或者若是无限，不明，计算会花费太大则返回Long.MAX_VALUE</span><br><span class="line"> * 如果这个Spliterator是SIZED，并且还没有被部分的遍历或者分割，又或者这个Spliterator是SUBSIZED 并且还没有被部分的遍历，</span><br><span class="line"> * 这个预估值必须是一个精确的元素会被完整的遍历的数量。否则，这个估计值可能会任意地不准确，但必须按照trySplit的调用中指定的降低</span><br><span class="line"> * </span><br><span class="line"> * @apiNote</span><br><span class="line"> * 即使是不准确的预估通常还是有用，并且计算量小。比如说，一个近似平衡二叉树的子Spliterator可以返回一个值</span><br><span class="line"> * 用以估计元素的数量为其父节点的一半。如果root Spliterator不能保值精确的数量，那么他会估计size为以对应的树结构的深度为指数，2为底数的值</span><br><span class="line"> * 即2^depth</span><br><span class="line"> *</span><br><span class="line"> */</span><br><span class="line">long estimateSize();</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/JDK源码阅读/" rel="tag"># JDK源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/05/Java泛型编程/" rel="next" title="Java泛型编程">
+                <i class="fa fa-chevron-left"></i> Java泛型编程
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ShallWei Zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ShallWeiZeng" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#LinkedList源码阅读"><span class="nav-number">1.</span> <span class="nav-text">LinkedList源码阅读</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#整体结构"><span class="nav-number">1.1.</span> <span class="nav-text">整体结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spliterator"><span class="nav-number">1.2.</span> <span class="nav-text">Spliterator</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#tryAdvance"><span class="nav-number">1.2.1.</span> <span class="nav-text">tryAdvance</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#forEachRemaining"><span class="nav-number">1.2.2.</span> <span class="nav-text">forEachRemaining</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#trySplit"><span class="nav-number">1.2.3.</span> <span class="nav-text">trySplit</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#estimateSize"><span class="nav-number">1.2.4.</span> <span class="nav-text">estimateSize</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ShallWei Zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

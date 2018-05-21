@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Java 泛型编程public static &amp;lt;T,U&amp;gt; T[] copyOf 泛型，即“参数化类型” 泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型） 泛型的使用泛型类public class Generic&amp;lt;T&amp;gt; &amp;#123;    private T key;    public Generic(T key) &amp;#">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java泛型编程">
+<meta property="og:url" content="http://yoursite.com/2018/05/05/Java泛型编程/index.html">
+<meta property="og:site_name" content="ShallWei Zeng">
+<meta property="og:description" content="Java 泛型编程public static &amp;lt;T,U&amp;gt; T[] copyOf 泛型，即“参数化类型” 泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型） 泛型的使用泛型类public class Generic&amp;lt;T&amp;gt; &amp;#123;    private T key;    public Generic(T key) &amp;#">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/extends.jpg">
+<meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/super.jpg">
+<meta property="og:updated_time" content="2018-05-21T16:01:18.925Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java泛型编程">
+<meta name="twitter:description" content="Java 泛型编程public static &amp;lt;T,U&amp;gt; T[] copyOf 泛型，即“参数化类型” 泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型） 泛型的使用泛型类public class Generic&amp;lt;T&amp;gt; &amp;#123;    private T key;    public Generic(T key) &amp;#">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/extends.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/05/05/Java泛型编程/"/>
+
+
+
+
+
+  <title>Java泛型编程 | ShallWei Zeng</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ShallWei Zeng</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/05/Java泛型编程/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java泛型编程</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-05-05T12:13:25+08:00">
+                2018-05-05 12:13:25
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/Java基础/" itemprop="url" rel="index">
+                    <span itemprop="name">Java基础</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="Java-泛型编程"><a href="#Java-泛型编程" class="headerlink" title="Java 泛型编程"></a>Java 泛型编程</h1><p>public static &lt;T,U&gt; T[] copyOf</p>
+<p>泛型，即“参数化类型”</p>
+<p>泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型）</p>
+<h2 id="泛型的使用"><a href="#泛型的使用" class="headerlink" title="泛型的使用"></a>泛型的使用</h2><h3 id="泛型类"><a href="#泛型类" class="headerlink" title="泛型类"></a>泛型类</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Generic&lt;T&gt; &#123;</span><br><span class="line">    private T key;</span><br><span class="line"></span><br><span class="line">    public Generic(T key) &#123;</span><br><span class="line">        this.key = key;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public T getKey() &#123;</span><br><span class="line">        return key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol>
+<li>泛型的类型参数只能是类类型，不能是简单类型，如int和Integer</li>
+<li>不能对确切的泛型类型使用instanceof操作。如下操作是非法的，编译时会报错</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">if (num instanceof Generic&lt;Number&gt;) &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="泛型接口"><a href="#泛型接口" class="headerlink" title="泛型接口"></a>泛型接口</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public interface Generator&lt;T&gt; &#123;</span><br><span class="line">    public T next();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong><em>当实现泛型接口的类，未传入泛型实参时</em></strong>:</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class FruitGenerator&lt;T&gt; implements Generator&lt;T&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public T next()&#123;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>未传入泛型实参时，与泛型类的定义相同，在声明类的时候，需要将泛型的声明也一起加到类中</p>
+<p><strong><em>当实现泛型接口的类，传入泛型实参时</em></strong>:<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class FruitGenerator implements Generator&lt;String&gt; &#123;</span><br><span class="line">    private String[] fruits = new String[] &#123;&quot;Apple&quot;, &quot;Banana&quot;, &quot;Pear&quot;&#125;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String next() &#123;</span><br><span class="line">        Random rand = new Random();</span><br><span class="line">        return fruits[rand.nextInt(3)];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>传入泛型实参时：</p>
+<p>定义一个生产器实现这个接口，虽然我们只创建了一个泛型接口Generator<t><br><br>但是我们可以为T传入无数个实参，形成无数种类型的Generator接口，<br>在实现类实现泛型接口是，如已将泛型类型传入实参类型，则所有使用泛型的地方都要替换成传入的实参类型</t></p>
+<p>即，Generator<t>, public T next();中的T都要替换成传入的String类型</t></p>
+<h3 id="泛型通配符"><a href="#泛型通配符" class="headerlink" title="泛型通配符"></a>泛型通配符</h3><p>Integer是Number的一个子类</p>
+<p>但是Generic<integer>不能被看作为Generic<number>的子类</number></integer></p>
+<p>同一种泛型可以对应多个版本（因为参数是不确定的），不同版本的泛型类实例是不兼容的</p>
+<p>类型通配符一般是使用?代替具体的类型实参，需要注意的的是，是类型实参，而不是类型形参。此处的?和Number,String,Integer一样都是一种实际的类型，可以?看成所有类型的父类。是一种真实的类型</p>
+<p>该通配符可以解决当具体类型不确定的时候，这个通配符就是?;当操作类型时，不需要使用类型的具体功能时，只使用Object类中的功能。那么可以用?通配符来表未知类型</p>
+<h3 id="泛型方法"><a href="#泛型方法" class="headerlink" title="泛型方法"></a>泛型方法</h3><p><strong><em>泛型类，是在实例化类的时候指明泛型的具体类型;泛型方法，是在调用方法的时候指明泛型的具体类型</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line">* 1）public 与返回值中间&lt;T&gt;非常重要，可以理解为声明此方法为泛型方法</span><br><span class="line">* 2）只有生命了&lt;T&gt;的方法才是泛型方法，泛型类中的使用了泛型的成员方法并不是泛型方法</span><br><span class="line">* 3）&lt;T&gt;表明该方法将使用泛型类型T，此时才可以在方法中使用泛型类型T</span><br><span class="line">* 4）与泛型类的定义一样，此处T可以随便写为任意标识，常见的如T,E,K,V等形式的参数常用于表示泛型</span><br><span class="line">*/</span><br><span class="line">public &lt;T&gt; T genericMethod(Class&lt;T&gt; tClass) throws InstantiationException,IllegalAccessException &#123;</span><br><span class="line">    T instance = tClass.newInstance();</span><br><span class="line">    return instance;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">Object obj = genericMethod(Class.forName(&quot;pacakage name&quot;));</span><br></pre></td></tr></table></figure>
+<h4 id="泛型方法的基本用法"><a href="#泛型方法的基本用法" class="headerlink" title="泛型方法的基本用法"></a>泛型方法的基本用法</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">public class GenericeTest &#123;</span><br><span class="line"></span><br><span class="line">    public class Generic&lt;T&gt; &#123;</span><br><span class="line">        private T key;</span><br><span class="line"></span><br><span class="line">        public Generic(T key) &#123;</span><br><span class="line">            this.key = key;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        //虽然在方法中用了泛型，但是这并不是一个泛型方法</span><br><span class="line">        //这只是类中一个普通的成员方法，只不过他的返回值是在声明泛型类已经声明过的泛型</span><br><span class="line">        //所以在这个方法中才可以继续使用T这个泛型</span><br><span class="line">        public T getKey()&#123;</span><br><span class="line">            return key;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * 因为在类的申明中并未声明泛型E，所以在使用E做形参和返回值类型时，编译器无法识别</span><br><span class="line">         * public E setKey(E key) &#123;</span><br><span class="line">             this.key = key;</span><br><span class="line">           &#125;</span><br><span class="line">         */</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 泛型方法，</span><br><span class="line">     * 首先在public与返回值之间的&lt;T&gt;必不可少，这表明这是一个泛型方法，并且声明了一个泛型T</span><br><span class="line">     * 这个T可以出现在这个泛型方法的任意位置</span><br><span class="line">     * 泛型的数量也可以为任意多个</span><br><span class="line">     * public &lt;T, K&gt; K showKeyName(Generic&lt;T&gt; container) &#123;</span><br><span class="line">     *     ...</span><br><span class="line">     * &#125;</span><br><span class="line">     */</span><br><span class="line">    public &lt;T&gt; T showKeyName(Generic&lt;T&gt; container) &#123;</span><br><span class="line">        System.out.println(&quot;container key : &quot; + container.getKey());</span><br><span class="line">        T test = container.getKey();</span><br><span class="line">        return test;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    //不是泛型方法，只是一个普通的方法，只是使用了Generic&lt;Number&gt;这个泛型类做形参而已</span><br><span class="line">    public void showKeyValue1(Generic&lt;Number&gt; obj) &#123;</span><br><span class="line">        System.out.println(&quot;key value is &quot; + obj.getKey());</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    //不是泛型方法，这也是一个普通的方法，只不过使用了泛型通配符?</span><br><span class="line">    //?是一种类型实参，可以看做为Number等所有类的父类</span><br><span class="line">    public void showKeyValue2(Generic&lt;?&gt; obj) &#123;</span><br><span class="line">        System.out.println(&quot;key value is &quot; + obj.getKey());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="类中的泛型方法"><a href="#类中的泛型方法" class="headerlink" title="类中的泛型方法"></a>类中的泛型方法</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class GenericeTest&lt;T&gt; &#123;</span><br><span class="line"></span><br><span class="line">    public void show1(T t) &#123;</span><br><span class="line">        System.out.println(t.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //在泛型类中声明了一个泛型方法，使用泛型E,这种泛型可以为任意类型。可以类型与T相同，也可以不同</span><br><span class="line">    //由于泛型方法在声明的时候会声明泛型&lt;E&gt;,因此即使在泛型类中并未声明泛型，编译器也能够正确识别泛型方法中的泛型</span><br><span class="line">    public &lt;E&gt; void show3(E t) &#123;</span><br><span class="line">        System.out.println(t.toString());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 在泛型类中声明了一个泛型方法，使用泛型T，注意这个T是一种全新的类型，可以与泛型类中声明的T不是同一种类型</span><br><span class="line">     */</span><br><span class="line">    public &lt;T&gt; void show2(T t) &#123;</span><br><span class="line">        System.out.println(t.toString());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="泛型方法与可变参数"><a href="#泛型方法与可变参数" class="headerlink" title="泛型方法与可变参数"></a>泛型方法与可变参数</h4><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public &lt;T&gt; void printMsg(T... args) &#123;</span><br><span class="line">    for (T t : args) &#123;</span><br><span class="line">        System.out.println(&quot;t is &quot; + t);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">printMsg(&quot;111&quot;, 222, &quot;aaaa&quot;, &quot;123.3&quot;,55.55)</span><br></pre></td></tr></table></figure>
+<h4 id="静态方法与泛型"><a href="#静态方法与泛型" class="headerlink" title="静态方法与泛型"></a>静态方法与泛型</h4><p>静态方法有一种情况需要注意下，那就是在类中的静态方法使用泛型：<strong><em>静态方法无法访问类上定义的泛型；如果静态反复的操作的引用数据类型不确定的时候，必须要将泛型定义在方法上</em></strong></p>
+<p>即：<strong><em>如果静态方法要使用泛型的话，必须将静态方法也定义成泛型方法</em></strong></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class StaticGenerator&lt;T&gt; &#123;</span><br><span class="line">    /**</span><br><span class="line">     * 如果在类中定义使用泛型的静态方法，需要添加额外的泛型声明（将这个方法定义成泛型方法）</span><br><span class="line">     * 即使静态方法要使用泛型类中已经声明过的泛型也不可以</span><br><span class="line">     * public static void show(T t) &#123;...&#125;, 编译器会报错</span><br><span class="line">     */</span><br><span class="line">    public static &lt;T&gt; void show(T t) &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>无论何时，如果你能做到，你就该尽量使用泛型方法，也就是说，如果使用泛型方法将整个类泛型话，那么就应该使用泛型方法。另外对于一个static的方法而言，无法访问泛型类型参数。所以如果static方法要使用泛型能力，就必须使其成为泛型方法</p>
+</blockquote>
+<h3 id="泛型上下边界"><a href="#泛型上下边界" class="headerlink" title="泛型上下边界"></a>泛型上下边界</h3><p>在使用泛型的时候，我们还可以为传入的泛型类型实参进行上下边界的限制，如：类型实参只准传入某种类型的父类或某种类型的子类</p>
+<p>为泛型添加上边界，即传入的类型实参必须是指定类型的子类型<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public void showKeyValue(Generic&lt;? extends Number&gt; obj) &#123;</span><br><span class="line">    System.out.println(&quot;key value is &quot; + obj.getKey());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>同时修改泛型类的定义</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class Generic&lt;T extends Number&gt; &#123;</span><br><span class="line">    private T key;</span><br><span class="line"></span><br><span class="line">    public Generic(T key) &#123;</span><br><span class="line">        this.key = key;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public T getKey() &#123;</span><br><span class="line">        return key;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在泛型方法中添加上下边界限制的时候，必须在权限声明与返回值之间的<t>上添加上下边界，即在泛型声明的时候添加，如下</t></p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public &lt;T extends Number&gt; T showKeyName(Generic&lt;T&gt; container) &#123;</span><br><span class="line">    System.out.println(&quot;container key :&quot; + container.getKey());</span><br><span class="line">    T test = container.getKey();</span><br><span class="line">    return test;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="泛型的上下界"><a href="#泛型的上下界" class="headerlink" title="泛型的上下界"></a>泛型的上下界</h2><h3 id="上界-extends"><a href="#上界-extends" class="headerlink" title="上界 extends"></a>上界 extends</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;? extends T&gt;表示类型的上界， 表示参数化的类型可能是指定的类型或者是此类型的子类</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/extends.jpg" alt="super.jpg"></p>
+<h3 id="下界-super"><a href="#下界-super" class="headerlink" title="下界 super"></a>下界 super</h3><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">&lt;? super T&gt;表示类型的下界， 表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直到Object</span><br></pre></td></tr></table></figure>
+<p><img src="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/super.jpg" alt="super.jpg"></p>
+<p><br></p>
+<p>参考：</p>
+<p><a href="https://blog.csdn.net/s10461/article/details/53941091" target="_blank" rel="noopener">https://blog.csdn.net/s10461/article/details/53941091</a></p>
+<p><a href="https://www.zhihu.com/question/20400700/answer/117464182" target="_blank" rel="noopener">https://www.zhihu.com/question/20400700/answer/117464182</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/05/05/ArrayList源码阅读/" rel="next" title="ArrayList源码阅读">
+                <i class="fa fa-chevron-left"></i> ArrayList源码阅读
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/05/22/LinkedList源码阅读/" rel="prev" title="LinkedList源码阅读">
+                LinkedList源码阅读 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ShallWei Zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ShallWeiZeng" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-泛型编程"><span class="nav-number">1.</span> <span class="nav-text">Java 泛型编程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#泛型的使用"><span class="nav-number">1.1.</span> <span class="nav-text">泛型的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型类"><span class="nav-number">1.1.1.</span> <span class="nav-text">泛型类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型接口"><span class="nav-number">1.1.2.</span> <span class="nav-text">泛型接口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型通配符"><span class="nav-number">1.1.3.</span> <span class="nav-text">泛型通配符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型方法"><span class="nav-number">1.1.4.</span> <span class="nav-text">泛型方法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#泛型方法的基本用法"><span class="nav-number">1.1.4.1.</span> <span class="nav-text">泛型方法的基本用法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类中的泛型方法"><span class="nav-number">1.1.4.2.</span> <span class="nav-text">类中的泛型方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#泛型方法与可变参数"><span class="nav-number">1.1.4.3.</span> <span class="nav-text">泛型方法与可变参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#静态方法与泛型"><span class="nav-number">1.1.4.4.</span> <span class="nav-text">静态方法与泛型</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#泛型上下边界"><span class="nav-number">1.1.5.</span> <span class="nav-text">泛型上下边界</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#泛型的上下界"><span class="nav-number">1.2.</span> <span class="nav-text">泛型的上下界</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#上界-extends"><span class="nav-number">1.2.1.</span> <span class="nav-text">上界 extends</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下界-super"><span class="nav-number">1.2.2.</span> <span class="nav-text">下界 super</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ShallWei Zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
