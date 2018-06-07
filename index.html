@@ -249,6 +249,138 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/07/Netty中的Jemalloc算法/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/06/07/Netty中的Jemalloc算法/" itemprop="url">Netty中的Jemalloc算法</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-07T23:02:53+08:00">
+                2018-06-07 23:02:53
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="Netty中的Jemalloc算法"><a href="#Netty中的Jemalloc算法" class="headerlink" title="Netty中的Jemalloc算法"></a>Netty中的Jemalloc算法</h1><p>之前有一个疑问，明明已经Java已经有了在Linux下的NIO实现并同样使用Epoll，为什么Netty要自己写写一个Epoll的.so库，下面库作者的回答解决了我的问题</p>
+<blockquote>
+<p>Netty’s epoll transport uses epoll edge-triggered while java’s nio library uses level-triggered. Beside this the epoll transport expose configuration options that are not present with java’s nio like TCP_CORK, SO_REUSEPORT and more.<br><a href="https://stackoverflow.com/questions/23465401/why-native-epoll-support-is-introduced-in-netty" target="_blank" rel="noopener">https://stackoverflow.com/questions/23465401/why-native-epoll-support-is-introduced-in-netty</a></p>
+</blockquote>
+<p>并且在Netty自己实现的库里面拥有比起JVM的实现方式更少的GC（按照作者本人的说法）。</p>
+<p>先说一下Epoll</p>
+<h2 id="Epoll"><a href="#Epoll" class="headerlink" title="Epoll"></a>Epoll</h2><blockquote>
+<p>epoll is a Linux kernel system call for a scalable I/O event notification mechanism, first introduced in version 2.5.44 of the Linux kernel mainline. Its function is to monitor multiple file descriptors to see if I/O is possible on any of them.</p>
+</blockquote>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2018/06/07/Netty中的Jemalloc算法/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/22/LinkedList源码阅读/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1826,7 +1958,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">9</span>
+                  <span class="site-state-item-count">10</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -1848,7 +1980,7 @@
               
               <div class="site-state-item site-state-tags">
                 <a href="/tags/index.html">
-                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-count">7</span>
                   <span class="site-state-item-name">标签</span>
                 </a>
               </div>
