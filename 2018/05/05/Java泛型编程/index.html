@@ -88,7 +88,7 @@
 <meta property="og:locale" content="zh-CN">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/extends.jpg">
 <meta property="og:image" content="https://raw.githubusercontent.com/ShallWeiZeng/markdownPhoto/master/super.jpg">
-<meta property="og:updated_time" content="2018-05-21T16:01:18.925Z">
+<meta property="og:updated_time" content="2018-06-07T15:10:26.560Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java泛型编程">
 <meta name="twitter:description" content="Java 泛型编程public static &amp;lt;T,U&amp;gt; T[] copyOf 泛型，即“参数化类型” 泛型的本质是为了参数化类型（在不创建新的类型的情况下，通过泛型指定的不同类型来控制形参具体限制的类型） 泛型的使用泛型类public class Generic&amp;lt;T&amp;gt; &amp;#123;    private T key;    public Generic(T key) &amp;#">
@@ -357,6 +357,7 @@
 <p><strong><em>当实现泛型接口的类，未传入泛型实参时</em></strong>:</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">class FruitGenerator&lt;T&gt; implements Generator&lt;T&gt; &#123;</span><br><span class="line">    @Override</span><br><span class="line">    public T next()&#123;</span><br><span class="line">        return null;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>未传入泛型实参时，与泛型类的定义相同，在声明类的时候，需要将泛型的声明也一起加到类中</p>
+<a id="more"></a>
 <p><strong><em>当实现泛型接口的类，传入泛型实参时</em></strong>:<br><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">public class FruitGenerator implements Generator&lt;String&gt; &#123;</span><br><span class="line">    private String[] fruits = new String[] &#123;&quot;Apple&quot;, &quot;Banana&quot;, &quot;Pear&quot;&#125;;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String next() &#123;</span><br><span class="line">        Random rand = new Random();</span><br><span class="line">        return fruits[rand.nextInt(3)];</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>传入泛型实参时：</p>
 <p>定义一个生产器实现这个接口，虽然我们只创建了一个泛型接口Generator<t><br><br>但是我们可以为T传入无数个实参，形成无数种类型的Generator接口，<br>在实现类实现泛型接口是，如已将泛型类型传入实参类型，则所有使用泛型的地方都要替换成传入的实参类型</t></p>

@@ -87,7 +87,7 @@
 <meta property="og:site_name" content="ShallWei Zeng">
 <meta property="og:description" content="ArrayList源码阅读Arrays.copyOf(U[] original, int newLength, Class&amp;lt;? extends T[]&amp;gt; newType)是一个泛型方法 复制某个特定的数组，如果有必要的话，擦除或者以null填充，以保证这个copy的副本有指定的长度。因为原始的数组和它的副本上对应的索引都是有效的，这两个数组会含有相同的值。对于任意的在副本里而不在原始的">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-05-05T04:36:06.962Z">
+<meta property="og:updated_time" content="2018-06-07T15:10:52.262Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="ArrayList源码阅读">
 <meta name="twitter:description" content="ArrayList源码阅读Arrays.copyOf(U[] original, int newLength, Class&amp;lt;? extends T[]&amp;gt; newType)是一个泛型方法 复制某个特定的数组，如果有必要的话，擦除或者以null填充，以保证这个copy的副本有指定的长度。因为原始的数组和它的副本上对应的索引都是有效的，这两个数组会含有相同的值。对于任意的在副本里而不在原始的">
@@ -349,6 +349,7 @@
 <p>T是原始的数组；U是返回的数组</p>
 <p>newType是这个副本的类，其传入的类型是Class,</p>
 <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">T[] copy = ((Object)newType == (Object)Object[].class)</span><br><span class="line">            ? (T[]) new Object[newLength]</span><br><span class="line">            : (T[]) Array.newInstance(newType.getComponentType(), newLength);</span><br></pre></td></tr></table></figure>
+<a id="more"></a>
 <p>在此之前先说明下Java的对象模型：</p>
 <blockquote>
 <p>1.所有的类都是Class类的实例，Object是类，那么Object也是Class类的一个实例<br>2.所有的类都最终继承自Object类，Class是类，那么Class也继承自Object</p>
