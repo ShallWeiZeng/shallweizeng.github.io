@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Netty源码阅读," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="PoolChunk 源码阅读package io.netty.buffer;/** * Description of algorithm for PageRun/PoolSubpage allocation from PoolChunk * * Notation: The following terms are important to understand the code * &amp;gt; pa">
+<meta name="keywords" content="Netty源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PoolChunk源码阅读">
+<meta property="og:url" content="http://yoursite.com/2018/06/11/PoolChunk源码阅读/index.html">
+<meta property="og:site_name" content="ShallWei Zeng">
+<meta property="og:description" content="PoolChunk 源码阅读package io.netty.buffer;/** * Description of algorithm for PageRun/PoolSubpage allocation from PoolChunk * * Notation: The following terms are important to understand the code * &amp;gt; pa">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-12T14:37:24.853Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PoolChunk源码阅读">
+<meta name="twitter:description" content="PoolChunk 源码阅读package io.netty.buffer;/** * Description of algorithm for PageRun/PoolSubpage allocation from PoolChunk * * Notation: The following terms are important to understand the code * &amp;gt; pa">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/11/PoolChunk源码阅读/"/>
+
+
+
+
+
+  <title>PoolChunk源码阅读 | ShallWei Zeng</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ShallWei Zeng</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/11/PoolChunk源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PoolChunk源码阅读</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-11T21:35:32+08:00">
+                2018-06-11 21:35:32
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<h1 id="PoolChunk-源码阅读"><a href="#PoolChunk-源码阅读" class="headerlink" title="PoolChunk 源码阅读"></a>PoolChunk 源码阅读</h1><figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package io.netty.buffer;</span><br><span class="line">/**</span><br><span class="line"> * Description of algorithm for PageRun/PoolSubpage allocation from PoolChunk</span><br><span class="line"> *</span><br><span class="line"> * Notation: The following terms are important to understand the code</span><br><span class="line"> * &gt; page  - a page is the smallest unit of memory chunk that can be allocated</span><br><span class="line"> * &gt; chunk - a chunk is a collection of pages</span><br><span class="line"> * &gt; in this code chunkSize = 2^&#123;maxOrder&#125; * pageSize</span><br><span class="line"> *</span><br><span class="line"> * To begin we allocate a byte array of size = chunkSize 一开始我们会分配一部分大小的字节数组</span><br><span class="line"> * Whenever a ByteBuf of given size needs to be created we search for the first position</span><br><span class="line"> * in the byte array that has enough empty space to accommodate the requested size and</span><br><span class="line"> * return a (long) handle that encodes this offset information, (this memory segment is then</span><br><span class="line"> * marked as reserved so it is always used by exactly one ByteBuf and no more)</span><br><span class="line"> * </span><br><span class="line"> * For simplicity all sizes are normalized according to PoolArena#normalizeCapacity method</span><br><span class="line"> * This ensures that when we request for memory segments of size &gt;= pageSize the normalizedCapacity</span><br><span class="line"> * equals the next nearest power of 2</span><br><span class="line"> *</span><br><span class="line"> * To search for the first offset in chunk that has at least requested size available we construct a</span><br><span class="line"> * complete balanced binary tree and store it in an array (just like heaps) - memoryMap</span><br><span class="line"> * 构造了一颗完全平衡二叉树--memoryMap</span><br><span class="line"> * The tree looks like this (the size of each node being mentioned in the parenthesis)</span><br><span class="line"> *</span><br><span class="line"> * depth=0        1 node (chunkSize)</span><br><span class="line"> * depth=1        2 nodes (chunkSize/2)</span><br><span class="line"> * ..</span><br><span class="line"> * ..</span><br><span class="line"> * depth=d        2^d nodes (chunkSize/2^d)</span><br><span class="line"> * ..</span><br><span class="line"> * depth=maxOrder 2^maxOrder nodes (chunkSize/2^&#123;maxOrder&#125; = pageSize)</span><br><span class="line"> *</span><br><span class="line"> * depth=maxOrder is the last level and the leafs consist of pages </span><br><span class="line"> * 最后一层叶子包含了page</span><br><span class="line"> * With this tree available searching in chunkArray translates like this:</span><br><span class="line"> * To allocate a memory segment of size chunkSize/2^k we search for the first node (from left) at height k</span><br><span class="line"> * which is unused</span><br><span class="line"> * </span><br><span class="line"> * Algorithm:</span><br><span class="line"> * ----------</span><br><span class="line"> * Encode the tree in memoryMap with the notation</span><br><span class="line"> *   memoryMap[id] = x =&gt; in the subtree rooted at id, the first node that is free to be allocated</span><br><span class="line"> *   is at depth x (counted from depth=0) i.e., at depths [depth_of_id, x), there is no node that is free</span><br><span class="line"> *   memoryMap[id] 的数值大小为[depth_of_id, x)</span><br><span class="line"> *  As we allocate &amp; free nodes, we update values stored in memoryMap so that the property is maintained</span><br><span class="line"> *  随着分配和释放节点，会更新存储在memoryMap里面的元素的值</span><br><span class="line"> * Initialization -</span><br><span class="line"> *   In the beginning we construct the memoryMap array by storing the depth of a node at each node</span><br><span class="line"> *     i.e., memoryMap[id] = depth_of_id</span><br><span class="line"> *</span><br><span class="line"> * Observations:</span><br><span class="line"> * -------------</span><br><span class="line"> * 1) memoryMap[id] = depth_of_id  =&gt; it is free / unallocated  若memoryMap[id]的值恰好等于对应的值，则代表是可以的被分配的</span><br><span class="line"> * 2) memoryMap[id] &gt; depth_of_id  =&gt; at least one of its child nodes is allocated, so we cannot allocate it, but</span><br><span class="line"> *                                    some of its children can still be allocated based on their availability</span><br><span class="line"> *                                    代表着至少一个孩子节点被分配了，所以不能分配这个节点，但是他的孩子节点也是可以进行分配的</span><br><span class="line"> * 3) memoryMap[id] = maxOrder + 1 =&gt; the node is fully allocated &amp; thus none of its children can be allocated, it</span><br><span class="line"> *                                    is thus marked as unusable</span><br><span class="line"> *                                    这个时候代表着已经被分配完，包括其孩子节点</span><br><span class="line"> * Algorithm: [allocateNode(d) =&gt; we want to find the first node (from left) at height h that can be allocated] </span><br><span class="line"> * ---------- 找到第一个在高度h的位置上能被分配的节点</span><br><span class="line"> * 1) start at root (i.e., depth = 0 or id = 1) </span><br><span class="line"> * 2) if memoryMap[1] &gt; d =&gt; cannot be allocated from this chunk  如果根节点都不可达了，那么就无法分配了</span><br><span class="line"> * 3) if left node value &lt;= h; we can allocate from left subtree so move to left and repeat until found </span><br><span class="line"> * 4) else try in right subtree</span><br><span class="line"> * 以根节点开始去查找, 优先左孩子，左孩子找不到则找右孩子</span><br><span class="line"> * Algorithm: [allocateRun(size)]</span><br><span class="line"> * ----------</span><br><span class="line"> * 1) Compute d = log_2(chunkSize/size)</span><br><span class="line"> * 2) Return allocateNode(d)</span><br><span class="line"> * </span><br><span class="line"> * Algorithm: [allocateSubpage(size)]</span><br><span class="line"> * ----------</span><br><span class="line"> * 1) use allocateNode(maxOrder) to find an empty (i.e., unused) leaf (i.e., page)</span><br><span class="line"> * 2) use this handle to construct the PoolSubpage object or if it already exists just call init(normCapacity)</span><br><span class="line"> *    note that this PoolSubpage object is added to subpagesPool in the PoolArena when we init() it</span><br><span class="line"> * 当init PoolSubpage对象时，将之放入PoolArena里的subpagesPool</span><br><span class="line"> * Note:</span><br><span class="line"> * -----</span><br><span class="line"> * In the implementation for improving cache coherence, 为了提高缓存一致性，我们在memoryMap里面存储了两种类型的信息</span><br><span class="line"> * we store 2 pieces of information (i.e, 2 byte vals) as a short value in memoryMap</span><br><span class="line"> *</span><br><span class="line"> * memoryMap[id]= (depth_of_id, x)</span><br><span class="line"> * where as per convention defined above</span><br><span class="line"> * the second value (i.e, x) indicates that the first node which is free to be allocated is at depth x (from root) 第二个值x，表示第一个可以被分配的节点在高度x上</span><br><span class="line"> */</span><br><span class="line">final class PoolChunk&lt;T&gt; implements PoolChunkMetric &#123;</span><br><span class="line"></span><br><span class="line">    private static final int INTEGER_SIZE_MINUS_ONE = Integer.SIZE - 1;//31</span><br><span class="line"></span><br><span class="line">    final PoolArena&lt;T&gt; arena;</span><br><span class="line">    final T memory;</span><br><span class="line">    final boolean unpooled;</span><br><span class="line">    final int offset;</span><br><span class="line"></span><br><span class="line">    private final byte[] memoryMap;</span><br><span class="line">    private final byte[] depthMap;</span><br><span class="line">    private final PoolSubpage&lt;T&gt;[] subpages;</span><br><span class="line">    /** Used to determine if the requested capacity is equal to or greater than pageSize. */</span><br><span class="line">    private final int subpageOverflowMask;</span><br><span class="line">    private final int pageSize;</span><br><span class="line">    private final int pageShifts;</span><br><span class="line">    private final int maxOrder;</span><br><span class="line">    private final int chunkSize;</span><br><span class="line">    private final int log2ChunkSize;</span><br><span class="line">    private final int maxSubpageAllocs;</span><br><span class="line">    /** Used to mark memory as unusable */</span><br><span class="line">    private final byte unusable;</span><br><span class="line"></span><br><span class="line">    private int freeBytes;</span><br><span class="line"></span><br><span class="line">    PoolChunkList&lt;T&gt; parent;</span><br><span class="line">    PoolChunk&lt;T&gt; prev;</span><br><span class="line">    PoolChunk&lt;T&gt; next;</span><br><span class="line"></span><br><span class="line">    // TODO: Test if adding padding helps under contention</span><br><span class="line">    //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;</span><br><span class="line"></span><br><span class="line">    PoolChunk(PoolArena&lt;T&gt; arena, T memory, int pageSize, int maxOrder, int pageShifts, int chunkSize, int offset) &#123;</span><br><span class="line">        unpooled = false;</span><br><span class="line">        //当前的chunk是属于哪一个arena</span><br><span class="line">        this.arena = arena;</span><br><span class="line">        //有多种结果，byte[], ByteBuf(Netty), DirectByteBuffer(Java), TODO 是直接分配的内存(需要具体去看)</span><br><span class="line">        this.memory = memory;</span><br><span class="line">        //和arena一样 pageSize 默认大小为8192   8kb 2^13</span><br><span class="line">        this.pageSize = pageSize;</span><br><span class="line">        //pageShifts 由PageSize算出来，公式主要为 Integer.SIZE - 1 - Integer.numberOfLeadingZeros(pageSize) = 32 - 1 - 18 = 13</span><br><span class="line">        this.pageShifts = pageShifts;</span><br><span class="line">        // maxOrder  默认为 11 8192 &lt;&lt; 11 = 16 MiB per chunk, 从零开始算，最后一层叶子的数量为 2 ^ 11 = 2048, 2048个叶子节点组成一个chunk，size为16MiB</span><br><span class="line">        this.maxOrder = maxOrder;</span><br><span class="line">        this.chunkSize = chunkSize;</span><br><span class="line">        // 默认从0开始</span><br><span class="line">        this.offset = offset;</span><br><span class="line">        unusable = (byte) (maxOrder + 1);</span><br><span class="line">        // 31 - 7 = 24</span><br><span class="line">        log2ChunkSize = log2(chunkSize);</span><br><span class="line">        // ~(2^13 - 1),这里代表的意思是，这个出来的结果是pageSize的整数倍，与这个值进行&amp;运算，如果是大于0，则代表超出了限制</span><br><span class="line">        subpageOverflowMask = ~(pageSize - 1);</span><br><span class="line">        freeBytes = chunkSize;</span><br><span class="line"></span><br><span class="line">        assert maxOrder &lt; 30 : &quot;maxOrder should be &lt; 30, but is: &quot; + maxOrder;</span><br><span class="line">        maxSubpageAllocs = 1 &lt;&lt; maxOrder;//2048</span><br><span class="line"></span><br><span class="line">        // Generate the memory map.</span><br><span class="line">        memoryMap = new byte[maxSubpageAllocs &lt;&lt; 1];//只保证叶子节点有效</span><br><span class="line">        depthMap = new byte[memoryMap.length];</span><br><span class="line">        int memoryMapIndex = 1; //下标从1开始</span><br><span class="line">        for (int d = 0; d &lt;= maxOrder; ++ d) &#123; // move down the tree one level at a time</span><br><span class="line">            int depth = 1 &lt;&lt; d;</span><br><span class="line">            for (int p = 0; p &lt; depth; ++ p) &#123;</span><br><span class="line">                // in each level traverse left to right and set value to the depth of subtree</span><br><span class="line">                memoryMap[memoryMapIndex] = (byte) d;</span><br><span class="line">                depthMap[memoryMapIndex] = (byte) d;</span><br><span class="line">                memoryMapIndex ++;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        //构造一个PoolSubPage的数组</span><br><span class="line">        subpages = newSubpageArray(maxSubpageAllocs);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /** Creates a special chunk that is not pooled. */</span><br><span class="line">    PoolChunk(PoolArena&lt;T&gt; arena, T memory, int size, int offset) &#123;</span><br><span class="line">        unpooled = true;</span><br><span class="line">        this.arena = arena;</span><br><span class="line">        this.memory = memory;</span><br><span class="line">        this.offset = offset;</span><br><span class="line">        memoryMap = null;</span><br><span class="line">        depthMap = null;</span><br><span class="line">        subpages = null;</span><br><span class="line">        subpageOverflowMask = 0;</span><br><span class="line">        pageSize = 0;</span><br><span class="line">        pageShifts = 0;</span><br><span class="line">        maxOrder = 0;</span><br><span class="line">        unusable = (byte) (maxOrder + 1);</span><br><span class="line">        chunkSize = size;</span><br><span class="line">        log2ChunkSize = log2(chunkSize);</span><br><span class="line">        maxSubpageAllocs = 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    private PoolSubpage&lt;T&gt;[] newSubpageArray(int size) &#123;</span><br><span class="line">        return new PoolSubpage[size];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int usage() &#123;</span><br><span class="line">        final int freeBytes;</span><br><span class="line">        synchronized (arena) &#123;</span><br><span class="line">            freeBytes = this.freeBytes;</span><br><span class="line">        &#125;</span><br><span class="line">        return usage(freeBytes);</span><br><span class="line">    &#125;</span><br><span class="line">    //计算现在的使用率</span><br><span class="line">    private int usage(int freeBytes) &#123;</span><br><span class="line">        if (freeBytes == 0) &#123;</span><br><span class="line">            return 100;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        int freePercentage = (int) (freeBytes * 100L / chunkSize);</span><br><span class="line">        if (freePercentage == 0) &#123;</span><br><span class="line">            return 99;</span><br><span class="line">        &#125;</span><br><span class="line">        return 100 - freePercentage;</span><br><span class="line">    &#125;</span><br><span class="line">    // 进行分配，分为两类，一类为一个page的大小，一类为多个page</span><br><span class="line">    long allocate(int normCapacity) &#123;</span><br><span class="line">        if ((normCapacity &amp; subpageOverflowMask) != 0) &#123; // &gt;= pageSize</span><br><span class="line">            return allocateRun(normCapacity);</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return allocateSubpage(normCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Update method used by allocate</span><br><span class="line">     * This is triggered only when a successor is allocated and all its predecessors</span><br><span class="line">     * need to update their state</span><br><span class="line">     * The minimal depth at which subtree rooted at id has some free space</span><br><span class="line">     * </span><br><span class="line">     * @param id id</span><br><span class="line">     */</span><br><span class="line">    private void updateParentsAlloc(int id) &#123;</span><br><span class="line">        while (id &gt; 1) &#123;</span><br><span class="line">            // 向上查找，获得父节点的id，因为是完全平衡二叉树</span><br><span class="line">            int parentId = id &gt;&gt;&gt; 1;</span><br><span class="line">            // 判断左右孩子的节点的值哪一个小，父节点取小的值</span><br><span class="line">            byte val1 = value(id);</span><br><span class="line">            byte val2 = value(id ^ 1);</span><br><span class="line">            byte val = val1 &lt; val2 ? val1 : val2;</span><br><span class="line">            setValue(parentId, val);</span><br><span class="line">            id = parentId;</span><br><span class="line">            //依次向上更新</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Update method used by free</span><br><span class="line">     * This needs to handle the special case when both children are completely free</span><br><span class="line">     * in which case parent be directly allocated on request of size = child-size * 2</span><br><span class="line">     * </span><br><span class="line">     * @param id id</span><br><span class="line">     */</span><br><span class="line">    private void updateParentsFree(int id) &#123;</span><br><span class="line">        // 初始化，为递归向上更新做准备，统一了逻辑</span><br><span class="line">        int logChild = depth(id) + 1;</span><br><span class="line">        while (id &gt; 1) &#123;</span><br><span class="line">            int parentId = id &gt;&gt;&gt; 1;</span><br><span class="line">            byte val1 = value(id);</span><br><span class="line">            byte val2 = value(id ^ 1);</span><br><span class="line">            logChild -= 1; // in first iteration equals log, subsequently reduce 1 from logChild as we traverse up</span><br><span class="line">            //判断左右孩子是否也已经被释放</span><br><span class="line">            if (val1 == logChild &amp;&amp; val2 == logChild) &#123;</span><br><span class="line">                setValue(parentId, (byte) (logChild - 1));</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                //左右孩子有一个还不可达</span><br><span class="line">                byte val = val1 &lt; val2 ? val1 : val2;</span><br><span class="line">                setValue(parentId, val);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            id = parentId;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Algorithm to allocate an index in memoryMap when we query for a free node</span><br><span class="line">     * at depth d</span><br><span class="line">     * 在深度为d的地方查找是否有空余节点,大致上分为两种，一种是d= maxOrder，代表了只需要一个page，若是d&lt;maxOrder则代表了需要多个page</span><br><span class="line">     * @param d depth</span><br><span class="line">     * @return index in memoryMap</span><br><span class="line">     */</span><br><span class="line">    private int allocateNode(int d) &#123;</span><br><span class="line">        int id = 1;</span><br><span class="line">        //以下按照d=maxOrder来看，d=13,</span><br><span class="line">        //此时的initial的二进制值为 11111111111111111110000000000000</span><br><span class="line">        int initial = - (1 &lt;&lt; d); // has last d bits = 0 and rest all = 1</span><br><span class="line">        byte val = value(id);</span><br><span class="line">        if (val &gt; d) &#123; // unusable 查看根节点是否可用</span><br><span class="line">            return -1;</span><br><span class="line">        &#125;</span><br><span class="line">        // (id &amp; initial) == 0 用来判断是否是在数组内</span><br><span class="line">        while (val &lt; d || (id &amp; initial) == 0) &#123; // id &amp; initial == 1 &lt;&lt; d for all ids at depth d, for &lt; d it is 0</span><br><span class="line">            id &lt;&lt;= 1;//先找左孩子</span><br><span class="line">            val = value(id);</span><br><span class="line">            if (val &gt; d) &#123;</span><br><span class="line">                id ^= 1;//到右孩子</span><br><span class="line">                val = value(id);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        byte value = value(id);</span><br><span class="line">        assert value == d &amp;&amp; (id &amp; initial) == 1 &lt;&lt; d : String.format(&quot;val = %d, id &amp; initial = %d, d = %d&quot;,</span><br><span class="line">                value, id &amp; initial, d);</span><br><span class="line">        setValue(id, unusable); // mark as unusable</span><br><span class="line">        updateParentsAlloc(id);</span><br><span class="line">        return id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Allocate a run of pages (&gt;=1)</span><br><span class="line">     * 分配多个page，称为run</span><br><span class="line">     * @param normCapacity normalized capacity</span><br><span class="line">     * @return index in memoryMap</span><br><span class="line">     */</span><br><span class="line">    private long allocateRun(int normCapacity) &#123;</span><br><span class="line">        //以2^14为例， log2(normCapacity) = 31 - 17 = 14 </span><br><span class="line">        // 14 - pageShifts = 14 - 13 = 1，最后d=11-1 = 10，高度为10的节点，代表了其下有两个page</span><br><span class="line">        int d = maxOrder - (log2(normCapacity) - pageShifts);</span><br><span class="line">        int id = allocateNode(d);</span><br><span class="line">        if (id &lt; 0) &#123;</span><br><span class="line">            return id;</span><br><span class="line">        &#125;</span><br><span class="line">        freeBytes -= runLength(id);</span><br><span class="line">        return id;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Create/ initialize a new PoolSubpage of normCapacity</span><br><span class="line">     * Any PoolSubpage created/ initialized here is added to subpage pool in the PoolArena that owns this PoolChunk</span><br><span class="line">     *</span><br><span class="line">     * @param normCapacity normalized capacity</span><br><span class="line">     * @return index in memoryMap 这边说的有点不准确（maybe），因为返回的最后是一个复合数字</span><br><span class="line">     */</span><br><span class="line">    private long allocateSubpage(int normCapacity) &#123;</span><br><span class="line">        // Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.</span><br><span class="line">        // This is need as we may add it back and so alter the linked-list structure.</span><br><span class="line">        PoolSubpage&lt;T&gt; head = arena.findSubpagePoolHead(normCapacity);</span><br><span class="line">        synchronized (head) &#123;</span><br><span class="line">            int d = maxOrder; // subpages are only be allocated from pages i.e., leaves</span><br><span class="line">            int id = allocateNode(d);</span><br><span class="line">            if (id &lt; 0) &#123;</span><br><span class="line">                return id;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            final PoolSubpage&lt;T&gt;[] subpages = this.subpages;</span><br><span class="line">            final int pageSize = this.pageSize;</span><br><span class="line"></span><br><span class="line">            freeBytes -= pageSize;</span><br><span class="line">            // 传入了page的id的位置，因为采用的是用数组表示二叉树，所以只有叶子节点才能代表着page,因为前面的限制，这边传入的都是叶子节点，id的数值为[2^11,2^12)</span><br><span class="line">            // maxSubpageAllocs ^ id = 2048 ^ id 将高位的数值去除（因为id的最高为恰好为2048），留下的正好是对应的page的编号</span><br><span class="line">            int subpageIdx = subpageIdx(id);</span><br><span class="line">            PoolSubpage&lt;T&gt; subpage = subpages[subpageIdx];</span><br><span class="line">            if (subpage == null) &#123;</span><br><span class="line">                // 初始化新的subPage</span><br><span class="line">                subpage = new PoolSubpage&lt;T&gt;(head, this, id, runOffset(id), pageSize, normCapacity);</span><br><span class="line">                subpages[subpageIdx] = subpage;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                subpage.init(head, normCapacity);</span><br><span class="line">            &#125;</span><br><span class="line">            // 这边返回的不应该理解成memoryMap中的index，而是一个复合值，低32位才代表memoryIndex</span><br><span class="line">            // 查看这个的具体调用函数，可以看见如果要确定是memoryMap里的哪一个值，只需要算出低32位的值就可以了</span><br><span class="line">            return subpage.allocate();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Free a subpage or a run of pages</span><br><span class="line">     * When a subpage is freed from PoolSubpage, it might be added back to subpage pool of the owning PoolArena</span><br><span class="line">     * If the subpage pool in PoolArena has at least one other PoolSubpage of given elemSize, we can</span><br><span class="line">     * completely free the owning Page so it is available for subsequent allocations</span><br><span class="line">     * 释放一个subpage或者多个page. </span><br><span class="line">     * @param handle handle to free</span><br><span class="line">     */</span><br><span class="line">    void free(long handle) &#123;</span><br><span class="line">        // 长整型转化成整型,取低32位的值来确定是哪一个page</span><br><span class="line">        int memoryMapIdx = memoryMapIdx(handle);</span><br><span class="line">        // 长整型转化为整型，取前32位的值确定page里面的哪一个内存段</span><br><span class="line">        int bitmapIdx = bitmapIdx(handle);</span><br><span class="line"></span><br><span class="line">        if (bitmapIdx != 0) &#123; // free a subpage</span><br><span class="line">            //获得到具体的subPage</span><br><span class="line">            PoolSubpage&lt;T&gt; subpage = subpages[subpageIdx(memoryMapIdx)];</span><br><span class="line">            assert subpage != null &amp;&amp; subpage.doNotDestroy;</span><br><span class="line"></span><br><span class="line">            // Obtain the head of the PoolSubPage pool that is owned by the PoolArena and synchronize on it.</span><br><span class="line">            // This is need as we may add it back and so alter the linked-list structure.</span><br><span class="line">            // 获得PoolSubPage pool的头结点</span><br><span class="line">            PoolSubpage&lt;T&gt; head = arena.findSubpagePoolHead(subpage.elemSize);</span><br><span class="line">            synchronized (head) &#123;</span><br><span class="line">                // 0x3FFFFFFF 结合着 PoolSubpage里的toHandle函数来查看，其实质为0x4000000000000000L 前32位的掩码</span><br><span class="line">                // 取0x3FFFFFFF</span><br><span class="line">                //   0x40000000  这样对比起来可以看出，0x3FFFFFFF是用来保证bitmapIdx的结果是能正常回归到原先的值</span><br><span class="line">                if (subpage.free(head, bitmapIdx &amp; 0x3FFFFFFF)) &#123;</span><br><span class="line">                    // 这边返回的true，代表这边的释放的page正在被使用</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        freeBytes += runLength(memoryMapIdx);</span><br><span class="line">        setValue(memoryMapIdx, depth(memoryMapIdx));</span><br><span class="line">        updateParentsFree(memoryMapIdx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void initBuf(PooledByteBuf&lt;T&gt; buf, long handle, int reqCapacity) &#123;</span><br><span class="line">        int memoryMapIdx = memoryMapIdx(handle);</span><br><span class="line">        int bitmapIdx = bitmapIdx(handle);</span><br><span class="line">        if (bitmapIdx == 0) &#123; // 代表的一个page</span><br><span class="line">            byte val = value(memoryMapIdx);</span><br><span class="line">            assert val == unusable : String.valueOf(val);</span><br><span class="line">            // TODO 涉及到PooledByteBuf， 看完之后再做说明</span><br><span class="line">            buf.init(this, handle, runOffset(memoryMapIdx) + offset, reqCapacity, runLength(memoryMapIdx),</span><br><span class="line">                     arena.parent.threadCache());</span><br><span class="line">        &#125; else &#123; // 分配了一个page里面的一个内存段</span><br><span class="line">            initBufWithSubpage(buf, handle, bitmapIdx, reqCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void initBufWithSubpage(PooledByteBuf&lt;T&gt; buf, long handle, int reqCapacity) &#123;</span><br><span class="line">        initBufWithSubpage(buf, handle, bitmapIdx(handle), reqCapacity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // TDOO 同样涉及到PooledByteBuf </span><br><span class="line">    private void initBufWithSubpage(PooledByteBuf&lt;T&gt; buf, long handle, int bitmapIdx, int reqCapacity) &#123;</span><br><span class="line">        assert bitmapIdx != 0;</span><br><span class="line"></span><br><span class="line">        int memoryMapIdx = memoryMapIdx(handle);</span><br><span class="line"></span><br><span class="line">        PoolSubpage&lt;T&gt; subpage = subpages[subpageIdx(memoryMapIdx)];</span><br><span class="line">        assert subpage.doNotDestroy;</span><br><span class="line">        assert reqCapacity &lt;= subpage.elemSize;</span><br><span class="line"></span><br><span class="line">        buf.init(</span><br><span class="line">            this, handle,</span><br><span class="line">            runOffset(memoryMapIdx) + (bitmapIdx &amp; 0x3FFFFFFF) * subpage.elemSize + offset,</span><br><span class="line">                reqCapacity, subpage.elemSize, arena.parent.threadCache());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private byte value(int id) &#123;</span><br><span class="line">        return memoryMap[id];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void setValue(int id, byte val) &#123;</span><br><span class="line">        memoryMap[id] = val;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private byte depth(int id) &#123;</span><br><span class="line">        return depthMap[id];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static int log2(int val) &#123;</span><br><span class="line">        // compute the (0-based, with lsb = 0) position of highest set bit i.e, log2</span><br><span class="line">        // i.e val = 10  则 return 31 - 28 = 3</span><br><span class="line">        return INTEGER_SIZE_MINUS_ONE - Integer.numberOfLeadingZeros(val);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int runLength(int id) &#123;</span><br><span class="line">        // represents the size in #bytes supported by node &apos;id&apos; in the tree</span><br><span class="line">        // &apos;-&apos;的优先级比&apos;&lt;&lt;&apos;的优先级高，所以这句话的执行顺序是先后面再前面 log2ChunkSize = 24 </span><br><span class="line">        // i.e 如果depth（id）= 11, 这个时候代表了分配了一个page，一个page的大小是2^13。24 - 11 = 13</span><br><span class="line">        // 这边相当于计算一个page的大小</span><br><span class="line">        return 1 &lt;&lt; log2ChunkSize - depth(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int runOffset(int id) &#123;</span><br><span class="line">        // represents the 0-based offset in #bytes from start of the byte-array chunk</span><br><span class="line">        // &apos;&lt;&lt;&apos;运算优先级比&apos;^&apos;高，所以会先去计算1 &lt;&lt; depth(id),然后算出来偏移的距离，为 n*pageSize，n为第几个page</span><br><span class="line">        int shift = id ^ 1 &lt;&lt; depth(id);</span><br><span class="line">        return shift * runLength(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int subpageIdx(int memoryMapIdx) &#123;</span><br><span class="line">        // maxSubpageAllocs 2048 </span><br><span class="line">        return memoryMapIdx ^ maxSubpageAllocs; // remove highest set bit, to get offset</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static int memoryMapIdx(long handle) &#123;</span><br><span class="line">        return (int) handle;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static int bitmapIdx(long handle) &#123;</span><br><span class="line">        // 取不属于整型的那部分</span><br><span class="line">        return (int) (handle &gt;&gt;&gt; Integer.SIZE);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int chunkSize() &#123;</span><br><span class="line">        return chunkSize;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int freeBytes() &#123;</span><br><span class="line">        synchronized (arena) &#123;</span><br><span class="line">            return freeBytes;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        final int freeBytes;</span><br><span class="line">        synchronized (arena) &#123;</span><br><span class="line">            freeBytes = this.freeBytes;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return new StringBuilder()</span><br><span class="line">                .append(&quot;Chunk(&quot;)</span><br><span class="line">                .append(Integer.toHexString(System.identityHashCode(this)))</span><br><span class="line">                .append(&quot;: &quot;)</span><br><span class="line">                .append(usage(freeBytes))</span><br><span class="line">                .append(&quot;%, &quot;)</span><br><span class="line">                .append(chunkSize - freeBytes)</span><br><span class="line">                .append(&apos;/&apos;)</span><br><span class="line">                .append(chunkSize)</span><br><span class="line">                .append(&apos;)&apos;)</span><br><span class="line">                .toString();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void destroy() &#123;</span><br><span class="line">        arena.destroyChunk(this);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Netty源码阅读/" rel="tag"># Netty源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/07/Netty中的Jemalloc算法/" rel="next" title="Netty中的Jemalloc算法">
+                <i class="fa fa-chevron-left"></i> Netty中的Jemalloc算法
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/11/PoolArena源码阅读/" rel="prev" title="PoolArena源码阅读">
+                PoolArena源码阅读 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ShallWei Zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ShallWeiZeng" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#PoolChunk-源码阅读"><span class="nav-number">1.</span> <span class="nav-text">PoolChunk 源码阅读</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ShallWei Zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

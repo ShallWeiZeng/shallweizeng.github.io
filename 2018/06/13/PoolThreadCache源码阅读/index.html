@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Netty源码阅读," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="package io.netty.buffer;import io.netty.buffer.PoolArena.SizeClass;import io.netty.util.Recycler;import io.netty.util.Recycler.Handle;import io.netty.util.internal.MathUtil;import io.netty.util.intern">
+<meta name="keywords" content="Netty源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PoolThreadCache源码阅读">
+<meta property="og:url" content="http://yoursite.com/2018/06/13/PoolThreadCache源码阅读/index.html">
+<meta property="og:site_name" content="ShallWei Zeng">
+<meta property="og:description" content="package io.netty.buffer;import io.netty.buffer.PoolArena.SizeClass;import io.netty.util.Recycler;import io.netty.util.Recycler.Handle;import io.netty.util.internal.MathUtil;import io.netty.util.intern">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-13T14:27:39.424Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PoolThreadCache源码阅读">
+<meta name="twitter:description" content="package io.netty.buffer;import io.netty.buffer.PoolArena.SizeClass;import io.netty.util.Recycler;import io.netty.util.Recycler.Handle;import io.netty.util.internal.MathUtil;import io.netty.util.intern">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/13/PoolThreadCache源码阅读/"/>
+
+
+
+
+
+  <title>PoolThreadCache源码阅读 | ShallWei Zeng</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ShallWei Zeng</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/13/PoolThreadCache源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PoolThreadCache源码阅读</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-13T22:17:30+08:00">
+                2018-06-13 22:17:30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package io.netty.buffer;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">import io.netty.buffer.PoolArena.SizeClass;</span><br><span class="line">import io.netty.util.Recycler;</span><br><span class="line">import io.netty.util.Recycler.Handle;</span><br><span class="line">import io.netty.util.internal.MathUtil;</span><br><span class="line">import io.netty.util.internal.PlatformDependent;</span><br><span class="line">import io.netty.util.internal.logging.InternalLogger;</span><br><span class="line">import io.netty.util.internal.logging.InternalLoggerFactory;</span><br><span class="line"></span><br><span class="line">import java.nio.ByteBuffer;</span><br><span class="line">import java.util.Queue;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * Acts a Thread cache for allocations. This implementation is moduled after</span><br><span class="line"> * &lt;a href=&quot;http://people.freebsd.org/~jasone/jemalloc/bsdcan2006/jemalloc.pdf&quot;&gt;jemalloc&lt;/a&gt; and the descripted</span><br><span class="line"> * technics of</span><br><span class="line"> * &lt;a href=&quot;https://www.facebook.com/notes/facebook-engineering/scalable-memory-allocation-using-jemalloc/480222803919&quot;&gt;</span><br><span class="line"> * Scalable memory allocation using jemalloc&lt;/a&gt;.</span><br><span class="line"> */</span><br><span class="line">final class PoolThreadCache &#123;</span><br><span class="line"></span><br><span class="line">    private static final InternalLogger logger = InternalLoggerFactory.getInstance(PoolThreadCache.class);</span><br><span class="line"></span><br><span class="line">    final PoolArena&lt;byte[]&gt; heapArena;</span><br><span class="line">    final PoolArena&lt;ByteBuffer&gt; directArena;</span><br><span class="line"></span><br><span class="line">    // Hold the caches for the different size classes, which are tiny, small and normal.</span><br><span class="line">    private final MemoryRegionCache&lt;byte[]&gt;[] tinySubPageHeapCaches;</span><br><span class="line">    private final MemoryRegionCache&lt;byte[]&gt;[] smallSubPageHeapCaches;</span><br><span class="line">    private final MemoryRegionCache&lt;ByteBuffer&gt;[] tinySubPageDirectCaches;</span><br><span class="line">    private final MemoryRegionCache&lt;ByteBuffer&gt;[] smallSubPageDirectCaches;</span><br><span class="line">    private final MemoryRegionCache&lt;byte[]&gt;[] normalHeapCaches;</span><br><span class="line">    private final MemoryRegionCache&lt;ByteBuffer&gt;[] normalDirectCaches;</span><br><span class="line"></span><br><span class="line">    // Used for bitshifting when calculate the index of normal caches later</span><br><span class="line">    private final int numShiftsNormalDirect;</span><br><span class="line">    private final int numShiftsNormalHeap;</span><br><span class="line">    private final int freeSweepAllocationThreshold;</span><br><span class="line"></span><br><span class="line">    private int allocations;</span><br><span class="line"></span><br><span class="line">    // TODO: Test if adding padding helps under contention</span><br><span class="line">    //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * tinyCacheSize   的默认值为 512</span><br><span class="line">     * smallCacheSize  的默认值为 256</span><br><span class="line">     * normalCacheSize 的默认值为 64</span><br><span class="line">     */</span><br><span class="line">    PoolThreadCache(PoolArena&lt;byte[]&gt; heapArena, PoolArena&lt;ByteBuffer&gt; directArena,</span><br><span class="line">                    int tinyCacheSize, int smallCacheSize, int normalCacheSize,</span><br><span class="line">                    int maxCachedBufferCapacity, int freeSweepAllocationThreshold) &#123;</span><br><span class="line">        if (maxCachedBufferCapacity &lt; 0) &#123;</span><br><span class="line">            throw new IllegalArgumentException(&quot;maxCachedBufferCapacity: &quot;</span><br><span class="line">                    + maxCachedBufferCapacity + &quot; (expected: &gt;= 0)&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        this.freeSweepAllocationThreshold = freeSweepAllocationThreshold;</span><br><span class="line">        this.heapArena = heapArena;</span><br><span class="line">        this.directArena = directArena;</span><br><span class="line">        if (directArena != null) &#123;</span><br><span class="line">            tinySubPageDirectCaches = createSubPageCaches(</span><br><span class="line">                    tinyCacheSize, PoolArena.numTinySubpagePools, SizeClass.Tiny);</span><br><span class="line">            smallSubPageDirectCaches = createSubPageCaches(</span><br><span class="line">                    smallCacheSize, directArena.numSmallSubpagePools, SizeClass.Small);</span><br><span class="line"></span><br><span class="line">            numShiftsNormalDirect = log2(directArena.pageSize);</span><br><span class="line">            normalDirectCaches = createNormalCaches(</span><br><span class="line">                    normalCacheSize, maxCachedBufferCapacity, directArena);</span><br><span class="line"></span><br><span class="line">            directArena.numThreadCaches.getAndIncrement();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // No directArea is configured so just null out all caches</span><br><span class="line">            tinySubPageDirectCaches = null;</span><br><span class="line">            smallSubPageDirectCaches = null;</span><br><span class="line">            normalDirectCaches = null;</span><br><span class="line">            numShiftsNormalDirect = -1;</span><br><span class="line">        &#125;</span><br><span class="line">        if (heapArena != null) &#123;</span><br><span class="line">            // Create the caches for the heap allocations</span><br><span class="line">            tinySubPageHeapCaches = createSubPageCaches(</span><br><span class="line">                    tinyCacheSize, PoolArena.numTinySubpagePools, SizeClass.Tiny);</span><br><span class="line">            smallSubPageHeapCaches = createSubPageCaches(</span><br><span class="line">                    smallCacheSize, heapArena.numSmallSubpagePools, SizeClass.Small);</span><br><span class="line"></span><br><span class="line">            numShiftsNormalHeap = log2(heapArena.pageSize);</span><br><span class="line">            normalHeapCaches = createNormalCaches(</span><br><span class="line">                    normalCacheSize, maxCachedBufferCapacity, heapArena);</span><br><span class="line"></span><br><span class="line">            heapArena.numThreadCaches.getAndIncrement();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // No heapArea is configured so just null out all caches</span><br><span class="line">            tinySubPageHeapCaches = null;</span><br><span class="line">            smallSubPageHeapCaches = null;</span><br><span class="line">            normalHeapCaches = null;</span><br><span class="line">            numShiftsNormalHeap = -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Only check if there are caches in use.</span><br><span class="line">        if ((tinySubPageDirectCaches != null || smallSubPageDirectCaches != null || normalDirectCaches != null</span><br><span class="line">                || tinySubPageHeapCaches != null || smallSubPageHeapCaches != null || normalHeapCaches != null)</span><br><span class="line">                &amp;&amp; freeSweepAllocationThreshold &lt; 1) &#123;</span><br><span class="line">            throw new IllegalArgumentException(&quot;freeSweepAllocationThreshold: &quot;</span><br><span class="line">                    + freeSweepAllocationThreshold + &quot; (expected: &gt; 0)&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static &lt;T&gt; MemoryRegionCache&lt;T&gt;[] createSubPageCaches(</span><br><span class="line">            int cacheSize, int numCaches, SizeClass sizeClass) &#123;</span><br><span class="line">        if (cacheSize &gt; 0 &amp;&amp; numCaches &gt; 0) &#123;</span><br><span class="line">            @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">            MemoryRegionCache&lt;T&gt;[] cache = new MemoryRegionCache[numCaches];</span><br><span class="line">            for (int i = 0; i &lt; cache.length; i++) &#123;</span><br><span class="line">                // TODO: maybe use cacheSize / cache.length</span><br><span class="line">                cache[i] = new SubPageMemoryRegionCache&lt;T&gt;(cacheSize, sizeClass);</span><br><span class="line">            &#125;</span><br><span class="line">            return cache;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static &lt;T&gt; MemoryRegionCache&lt;T&gt;[] createNormalCaches(</span><br><span class="line">            int cacheSize, int maxCachedBufferCapacity, PoolArena&lt;T&gt; area) &#123;</span><br><span class="line">        if (cacheSize &gt; 0 &amp;&amp; maxCachedBufferCapacity &gt; 0) &#123;</span><br><span class="line">            int max = Math.min(area.chunkSize, maxCachedBufferCapacity);</span><br><span class="line">            int arraySize = Math.max(1, log2(max / area.pageSize) + 1);</span><br><span class="line"></span><br><span class="line">            @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">            MemoryRegionCache&lt;T&gt;[] cache = new MemoryRegionCache[arraySize];</span><br><span class="line">            for (int i = 0; i &lt; cache.length; i++) &#123;</span><br><span class="line">                cache[i] = new NormalMemoryRegionCache&lt;T&gt;(cacheSize);</span><br><span class="line">            &#125;</span><br><span class="line">            return cache;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static int log2(int val) &#123;</span><br><span class="line">        int res = 0;</span><br><span class="line">        while (val &gt; 1) &#123;</span><br><span class="line">            val &gt;&gt;= 1;</span><br><span class="line">            res++;</span><br><span class="line">        &#125;</span><br><span class="line">        return res;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Try to allocate a tiny buffer out of the cache. Returns &#123;@code true&#125; if successful &#123;@code false&#125; otherwise</span><br><span class="line">     */</span><br><span class="line">    boolean allocateTiny(PoolArena&lt;?&gt; area, PooledByteBuf&lt;?&gt; buf, int reqCapacity, int normCapacity) &#123;</span><br><span class="line">        return allocate(cacheForTiny(area, normCapacity), buf, reqCapacity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Try to allocate a small buffer out of the cache. Returns &#123;@code true&#125; if successful &#123;@code false&#125; otherwise</span><br><span class="line">     */</span><br><span class="line">    boolean allocateSmall(PoolArena&lt;?&gt; area, PooledByteBuf&lt;?&gt; buf, int reqCapacity, int normCapacity) &#123;</span><br><span class="line">        return allocate(cacheForSmall(area, normCapacity), buf, reqCapacity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Try to allocate a small buffer out of the cache. Returns &#123;@code true&#125; if successful &#123;@code false&#125; otherwise</span><br><span class="line">     */</span><br><span class="line">    boolean allocateNormal(PoolArena&lt;?&gt; area, PooledByteBuf&lt;?&gt; buf, int reqCapacity, int normCapacity) &#123;</span><br><span class="line">        return allocate(cacheForNormal(area, normCapacity), buf, reqCapacity);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SuppressWarnings(&#123; &quot;unchecked&quot;, &quot;rawtypes&quot; &#125;)</span><br><span class="line">    private boolean allocate(MemoryRegionCache&lt;?&gt; cache, PooledByteBuf buf, int reqCapacity) &#123;</span><br><span class="line">        if (cache == null) &#123;</span><br><span class="line">            // no cache found so just return false here</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">        boolean allocated = cache.allocate(buf, reqCapacity);</span><br><span class="line">        if (++ allocations &gt;= freeSweepAllocationThreshold) &#123;</span><br><span class="line">            allocations = 0;</span><br><span class="line">            trim();</span><br><span class="line">        &#125;</span><br><span class="line">        return allocated;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Add &#123;@link PoolChunk&#125; and &#123;@code handle&#125; to the cache if there is enough room.</span><br><span class="line">     * Returns &#123;@code true&#125; if it fit into the cache &#123;@code false&#125; otherwise.</span><br><span class="line">     */</span><br><span class="line">    @SuppressWarnings(&#123; &quot;unchecked&quot;, &quot;rawtypes&quot; &#125;)</span><br><span class="line">    boolean add(PoolArena&lt;?&gt; area, PoolChunk chunk, long handle, int normCapacity, SizeClass sizeClass) &#123;</span><br><span class="line">        MemoryRegionCache&lt;?&gt; cache = cache(area, normCapacity, sizeClass);</span><br><span class="line">        if (cache == null) &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">        return cache.add(chunk, handle);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private MemoryRegionCache&lt;?&gt; cache(PoolArena&lt;?&gt; area, int normCapacity, SizeClass sizeClass) &#123;</span><br><span class="line">        switch (sizeClass) &#123;</span><br><span class="line">        case Normal:</span><br><span class="line">            return cacheForNormal(area, normCapacity);</span><br><span class="line">        case Small:</span><br><span class="line">            return cacheForSmall(area, normCapacity);</span><br><span class="line">        case Tiny:</span><br><span class="line">            return cacheForTiny(area, normCapacity);</span><br><span class="line">        default:</span><br><span class="line">            throw new Error();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     *  Should be called if the Thread that uses this cache is about to exist to release resources out of the cache</span><br><span class="line">     */</span><br><span class="line">    void free() &#123;</span><br><span class="line">        int numFreed = free(tinySubPageDirectCaches) +</span><br><span class="line">                free(smallSubPageDirectCaches) +</span><br><span class="line">                free(normalDirectCaches) +</span><br><span class="line">                free(tinySubPageHeapCaches) +</span><br><span class="line">                free(smallSubPageHeapCaches) +</span><br><span class="line">                free(normalHeapCaches);</span><br><span class="line"></span><br><span class="line">        if (numFreed &gt; 0 &amp;&amp; logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(&quot;Freed &#123;&#125; thread-local buffer(s) from thread: &#123;&#125;&quot;, numFreed, Thread.currentThread().getName());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (directArena != null) &#123;</span><br><span class="line">            directArena.numThreadCaches.getAndDecrement();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (heapArena != null) &#123;</span><br><span class="line">            heapArena.numThreadCaches.getAndDecrement();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static int free(MemoryRegionCache&lt;?&gt;[] caches) &#123;</span><br><span class="line">        if (caches == null) &#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        int numFreed = 0;</span><br><span class="line">        for (MemoryRegionCache&lt;?&gt; c: caches) &#123;</span><br><span class="line">            numFreed += free(c);</span><br><span class="line">        &#125;</span><br><span class="line">        return numFreed;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static int free(MemoryRegionCache&lt;?&gt; cache) &#123;</span><br><span class="line">        if (cache == null) &#123;</span><br><span class="line">            return 0;</span><br><span class="line">        &#125;</span><br><span class="line">        return cache.free();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void trim() &#123;</span><br><span class="line">        trim(tinySubPageDirectCaches);</span><br><span class="line">        trim(smallSubPageDirectCaches);</span><br><span class="line">        trim(normalDirectCaches);</span><br><span class="line">        trim(tinySubPageHeapCaches);</span><br><span class="line">        trim(smallSubPageHeapCaches);</span><br><span class="line">        trim(normalHeapCaches);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void trim(MemoryRegionCache&lt;?&gt;[] caches) &#123;</span><br><span class="line">        if (caches == null) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        for (MemoryRegionCache&lt;?&gt; c: caches) &#123;</span><br><span class="line">            trim(c);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void trim(MemoryRegionCache&lt;?&gt; cache) &#123;</span><br><span class="line">        if (cache == null) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        cache.trim();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private MemoryRegionCache&lt;?&gt; cacheForTiny(PoolArena&lt;?&gt; area, int normCapacity) &#123;</span><br><span class="line">        int idx = PoolArena.tinyIdx(normCapacity);</span><br><span class="line">        if (area.isDirect()) &#123;</span><br><span class="line">            return cache(tinySubPageDirectCaches, idx);</span><br><span class="line">        &#125;</span><br><span class="line">        return cache(tinySubPageHeapCaches, idx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private MemoryRegionCache&lt;?&gt; cacheForSmall(PoolArena&lt;?&gt; area, int normCapacity) &#123;</span><br><span class="line">        int idx = PoolArena.smallIdx(normCapacity);</span><br><span class="line">        if (area.isDirect()) &#123;</span><br><span class="line">            return cache(smallSubPageDirectCaches, idx);</span><br><span class="line">        &#125;</span><br><span class="line">        return cache(smallSubPageHeapCaches, idx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private MemoryRegionCache&lt;?&gt; cacheForNormal(PoolArena&lt;?&gt; area, int normCapacity) &#123;</span><br><span class="line">        if (area.isDirect()) &#123;</span><br><span class="line">            int idx = log2(normCapacity &gt;&gt; numShiftsNormalDirect);</span><br><span class="line">            return cache(normalDirectCaches, idx);</span><br><span class="line">        &#125;</span><br><span class="line">        int idx = log2(normCapacity &gt;&gt; numShiftsNormalHeap);</span><br><span class="line">        return cache(normalHeapCaches, idx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static &lt;T&gt; MemoryRegionCache&lt;T&gt; cache(MemoryRegionCache&lt;T&gt;[] cache, int idx) &#123;</span><br><span class="line">        if (cache == null || idx &gt; cache.length - 1) &#123;</span><br><span class="line">            return null;</span><br><span class="line">        &#125;</span><br><span class="line">        return cache[idx];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Cache used for buffers which are backed by TINY or SMALL size.</span><br><span class="line">     */</span><br><span class="line">    private static final class SubPageMemoryRegionCache&lt;T&gt; extends MemoryRegionCache&lt;T&gt; &#123;</span><br><span class="line">        SubPageMemoryRegionCache(int size, SizeClass sizeClass) &#123;</span><br><span class="line">            super(size, sizeClass);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected void initBuf(</span><br><span class="line">                PoolChunk&lt;T&gt; chunk, long handle, PooledByteBuf&lt;T&gt; buf, int reqCapacity) &#123;</span><br><span class="line">            chunk.initBufWithSubpage(buf, handle, reqCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Cache used for buffers which are backed by NORMAL size.</span><br><span class="line">     */</span><br><span class="line">    private static final class NormalMemoryRegionCache&lt;T&gt; extends MemoryRegionCache&lt;T&gt; &#123;</span><br><span class="line">        NormalMemoryRegionCache(int size) &#123;</span><br><span class="line">            super(size, SizeClass.Normal);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected void initBuf(</span><br><span class="line">                PoolChunk&lt;T&gt; chunk, long handle, PooledByteBuf&lt;T&gt; buf, int reqCapacity) &#123;</span><br><span class="line">            chunk.initBuf(buf, handle, reqCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private abstract static class MemoryRegionCache&lt;T&gt; &#123;</span><br><span class="line">        private final int size;</span><br><span class="line">        private final Queue&lt;Entry&lt;T&gt;&gt; queue;</span><br><span class="line">        private final SizeClass sizeClass;</span><br><span class="line">        private int allocations;</span><br><span class="line"></span><br><span class="line">        MemoryRegionCache(int size, SizeClass sizeClass) &#123;</span><br><span class="line">            this.size = MathUtil.safeFindNextPositivePowerOfTwo(size);</span><br><span class="line">            queue = PlatformDependent.newFixedMpscQueue(this.size);</span><br><span class="line">            this.sizeClass = sizeClass;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * Init the &#123;@link PooledByteBuf&#125; using the provided chunk and handle with the capacity restrictions.</span><br><span class="line">         */</span><br><span class="line">        protected abstract void initBuf(PoolChunk&lt;T&gt; chunk, long handle,</span><br><span class="line">                                        PooledByteBuf&lt;T&gt; buf, int reqCapacity);</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * Add to cache if not already full.</span><br><span class="line">         */</span><br><span class="line">        @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">        public final boolean add(PoolChunk&lt;T&gt; chunk, long handle) &#123;</span><br><span class="line">            Entry&lt;T&gt; entry = newEntry(chunk, handle);</span><br><span class="line">            boolean queued = queue.offer(entry);</span><br><span class="line">            if (!queued) &#123;</span><br><span class="line">                // If it was not possible to cache the chunk, immediately recycle the entry</span><br><span class="line">                entry.recycle();</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            return queued;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * Allocate something out of the cache if possible and remove the entry from the cache.</span><br><span class="line">         */</span><br><span class="line">        public final boolean allocate(PooledByteBuf&lt;T&gt; buf, int reqCapacity) &#123;</span><br><span class="line">            Entry&lt;T&gt; entry = queue.poll();</span><br><span class="line">            if (entry == null) &#123;</span><br><span class="line">                return false;</span><br><span class="line">            &#125;</span><br><span class="line">            initBuf(entry.chunk, entry.handle, buf, reqCapacity);</span><br><span class="line">            entry.recycle();</span><br><span class="line"></span><br><span class="line">            // allocations is not thread-safe which is fine as this is only called from the same thread all time.</span><br><span class="line">            ++ allocations;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * Clear out this cache and free up all previous cached &#123;@link PoolChunk&#125;s and &#123;@code handle&#125;s.</span><br><span class="line">         */</span><br><span class="line">        public final int free() &#123;</span><br><span class="line">            return free(Integer.MAX_VALUE);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private int free(int max) &#123;</span><br><span class="line">            int numFreed = 0;</span><br><span class="line">            for (; numFreed &lt; max; numFreed++) &#123;</span><br><span class="line">                Entry&lt;T&gt; entry = queue.poll();</span><br><span class="line">                if (entry != null) &#123;</span><br><span class="line">                    freeEntry(entry);</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    // all cleared</span><br><span class="line">                    return numFreed;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            return numFreed;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        /**</span><br><span class="line">         * Free up cached &#123;@link PoolChunk&#125;s if not allocated frequently enough.</span><br><span class="line">         */</span><br><span class="line">        public final void trim() &#123;</span><br><span class="line">            int free = size - allocations;</span><br><span class="line">            allocations = 0;</span><br><span class="line"></span><br><span class="line">            // We not even allocated all the number that are</span><br><span class="line">            if (free &gt; 0) &#123;</span><br><span class="line">                free(free);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @SuppressWarnings(&#123; &quot;unchecked&quot;, &quot;rawtypes&quot; &#125;)</span><br><span class="line">        private  void freeEntry(Entry entry) &#123;</span><br><span class="line">            PoolChunk chunk = entry.chunk;</span><br><span class="line">            long handle = entry.handle;</span><br><span class="line"></span><br><span class="line">            // recycle now so PoolChunk can be GC&apos;ed.</span><br><span class="line">            entry.recycle();</span><br><span class="line"></span><br><span class="line">            chunk.arena.freeChunk(chunk, handle, sizeClass);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        static final class Entry&lt;T&gt; &#123;</span><br><span class="line">            final Handle&lt;Entry&lt;?&gt;&gt; recyclerHandle;</span><br><span class="line">            PoolChunk&lt;T&gt; chunk;</span><br><span class="line">            long handle = -1;</span><br><span class="line"></span><br><span class="line">            Entry(Handle&lt;Entry&lt;?&gt;&gt; recyclerHandle) &#123;</span><br><span class="line">                this.recyclerHandle = recyclerHandle;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            void recycle() &#123;</span><br><span class="line">                chunk = null;</span><br><span class="line">                handle = -1;</span><br><span class="line">                recyclerHandle.recycle(this);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @SuppressWarnings(&quot;rawtypes&quot;)</span><br><span class="line">        private static Entry newEntry(PoolChunk&lt;?&gt; chunk, long handle) &#123;</span><br><span class="line">            Entry entry = RECYCLER.get();</span><br><span class="line">            entry.chunk = chunk;</span><br><span class="line">            entry.handle = handle;</span><br><span class="line">            return entry;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @SuppressWarnings(&quot;rawtypes&quot;)</span><br><span class="line">        private static final Recycler&lt;Entry&gt; RECYCLER = new Recycler&lt;Entry&gt;() &#123;</span><br><span class="line">            @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">            @Override</span><br><span class="line">            protected Entry newObject(Handle&lt;Entry&gt; handle) &#123;</span><br><span class="line">                return new Entry(handle);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Netty源码阅读/" rel="tag"># Netty源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/12/PooledByteBuf源码阅读/" rel="next" title="PooledByteBuf源码阅读">
+                <i class="fa fa-chevron-left"></i> PooledByteBuf源码阅读
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ShallWei Zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ShallWeiZeng" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ShallWei Zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

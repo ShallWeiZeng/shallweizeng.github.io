@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Netty源码阅读," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="package io.netty.buffer;final class PoolSubpage&amp;lt;T&amp;gt; implements PoolSubpageMetric &amp;#123;    final PoolChunk&amp;lt;T&amp;gt; chunk;    private final int memoryMapIdx;    private final int runOffset;    p">
+<meta name="keywords" content="Netty源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PoolSubpage源码阅读">
+<meta property="og:url" content="http://yoursite.com/2018/06/11/PoolSubpage源码阅读/index.html">
+<meta property="og:site_name" content="ShallWei Zeng">
+<meta property="og:description" content="package io.netty.buffer;final class PoolSubpage&amp;lt;T&amp;gt; implements PoolSubpageMetric &amp;#123;    final PoolChunk&amp;lt;T&amp;gt; chunk;    private final int memoryMapIdx;    private final int runOffset;    p">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-12T14:13:57.519Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PoolSubpage源码阅读">
+<meta name="twitter:description" content="package io.netty.buffer;final class PoolSubpage&amp;lt;T&amp;gt; implements PoolSubpageMetric &amp;#123;    final PoolChunk&amp;lt;T&amp;gt; chunk;    private final int memoryMapIdx;    private final int runOffset;    p">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/11/PoolSubpage源码阅读/"/>
+
+
+
+
+
+  <title>PoolSubpage源码阅读 | ShallWei Zeng</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ShallWei Zeng</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/11/PoolSubpage源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PoolSubpage源码阅读</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-11T22:13:31+08:00">
+                2018-06-11 22:13:31
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">package io.netty.buffer;</span><br><span class="line"></span><br><span class="line">final class PoolSubpage&lt;T&gt; implements PoolSubpageMetric &#123;</span><br><span class="line"></span><br><span class="line">    final PoolChunk&lt;T&gt; chunk;</span><br><span class="line">    private final int memoryMapIdx;</span><br><span class="line">    private final int runOffset;</span><br><span class="line">    private final int pageSize;</span><br><span class="line">    private final long[] bitmap;</span><br><span class="line"></span><br><span class="line">    PoolSubpage&lt;T&gt; prev;</span><br><span class="line">    PoolSubpage&lt;T&gt; next;</span><br><span class="line"></span><br><span class="line">    boolean doNotDestroy;</span><br><span class="line">    int elemSize;</span><br><span class="line">    private int maxNumElems;</span><br><span class="line">    private int bitmapLength;</span><br><span class="line">    private int nextAvail;</span><br><span class="line">    private int numAvail;</span><br><span class="line"></span><br><span class="line">    // TODO: Test if adding padding helps under contention</span><br><span class="line">    //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;</span><br><span class="line"></span><br><span class="line">    /** Special constructor that creates a linked list head */</span><br><span class="line">    PoolSubpage(int pageSize) &#123;</span><br><span class="line">        //默认值为8kb，在PoolArena那边被初始化，TODO 看情况是是作为subPage的头结点，这点存疑</span><br><span class="line">        chunk = null;</span><br><span class="line">        memoryMapIdx = -1;</span><br><span class="line">        runOffset = -1;</span><br><span class="line">        elemSize = -1;</span><br><span class="line">        this.pageSize = pageSize;</span><br><span class="line">        bitmap = null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**通过PoolChunk中的allocateSubpage所调用，也即是在申请分配内存的时候会请求subpage</span><br><span class="line">     * memoryMapidx，由PoolChunk传过来的值为分配的memoryMap的下标</span><br><span class="line">     * runOffset 为当前偏移的单位，单位长度为8192</span><br><span class="line">    */</span><br><span class="line">    PoolSubpage(PoolSubpage&lt;T&gt; head, PoolChunk&lt;T&gt; chunk, int memoryMapIdx, int runOffset, int pageSize, int elemSize) &#123;</span><br><span class="line">        this.chunk = chunk;</span><br><span class="line">        this.memoryMapIdx = memoryMapIdx;</span><br><span class="line">        this.runOffset = runOffset;</span><br><span class="line">        this.pageSize = pageSize; //8kb</span><br><span class="line">        // 2^ 13 &gt;&gt;&gt; 4 &gt;&gt;&gt; 6 = 8 个long长度的bitmap， </span><br><span class="line">        // 因为elemSize最小为16,（可以在PoolArena里面的normalizeCapacity得知），</span><br><span class="line">        // 8192/16 = 512 最多512的内存段，正好8个long长度的可以表示</span><br><span class="line">        bitmap = new long[pageSize &gt;&gt;&gt; 10]; // pageSize / 16 / 64</span><br><span class="line">        init(head, elemSize);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void init(PoolSubpage&lt;T&gt; head, int elemSize) &#123;</span><br><span class="line">        doNotDestroy = true;</span><br><span class="line">        this.elemSize = elemSize;</span><br><span class="line">        if (elemSize != 0) &#123;</span><br><span class="line">            maxNumElems = numAvail = pageSize / elemSize;</span><br><span class="line">            nextAvail = 0;</span><br><span class="line">            // 相当于有多少个long长度的数</span><br><span class="line">            bitmapLength = maxNumElems &gt;&gt;&gt; 6;</span><br><span class="line">            //归约后，maxNumElems 可能是32， 32 &amp; 63 = 32， 小于1&lt;&lt;6的特殊处理</span><br><span class="line">            if ((maxNumElems &amp; 63) != 0) &#123;</span><br><span class="line">                bitmapLength ++;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            for (int i = 0; i &lt; bitmapLength; i ++) &#123;</span><br><span class="line">                bitmap[i] = 0;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        addToPool(head);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * Returns the bitmap index of the subpage allocation.</span><br><span class="line">     * 返回的是bitmap的index</span><br><span class="line">     */</span><br><span class="line">    long allocate() &#123;</span><br><span class="line">        // elemSize = 0 的情况 只有可能在allocateSubpage里面subPage被初始化的时候才会造成elemSize = 0</span><br><span class="line">        // 相当于直接给了整个page</span><br><span class="line">        if (elemSize == 0) &#123;</span><br><span class="line">            return toHandle(0);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (numAvail == 0 || !doNotDestroy) &#123;</span><br><span class="line">            return -1;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        final int bitmapIdx = getNextAvail();</span><br><span class="line">        int q = bitmapIdx &gt;&gt;&gt; 6; //找到bitmap中的下标</span><br><span class="line">        int r = bitmapIdx &amp; 63;// 确定出对应元素的中的第几位</span><br><span class="line">        assert (bitmap[q] &gt;&gt;&gt; r &amp; 1) == 0;</span><br><span class="line">        bitmap[q] |= 1L &lt;&lt; r; // 将对应元素置为已用</span><br><span class="line"></span><br><span class="line">        if (-- numAvail == 0) &#123;</span><br><span class="line">            // 这时候的可用的内存段已经没有了，所以这个时候需要将该page从链表中删除</span><br><span class="line">            removeFromPool();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return toHandle(bitmapIdx);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * @return &#123;@code true&#125; if this subpage is in use.</span><br><span class="line">     *         &#123;@code false&#125; if this subpage is not used by its chunk and thus it&apos;s OK to be released.</span><br><span class="line">     */</span><br><span class="line">    boolean free(PoolSubpage&lt;T&gt; head, int bitmapIdx) &#123;</span><br><span class="line">        // 代表该page直接被使用了</span><br><span class="line">        if (elemSize == 0) &#123;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">        int q = bitmapIdx &gt;&gt;&gt; 6;// 获得bitmap的位置</span><br><span class="line">        int r = bitmapIdx &amp; 63;// 判断是哪些个块被释放掉了</span><br><span class="line">        assert (bitmap[q] &gt;&gt;&gt; r &amp; 1) != 0;</span><br><span class="line">        bitmap[q] ^= 1L &lt;&lt; r; // ^的结果会将对应为1的位置的数置为0</span><br><span class="line"></span><br><span class="line">        setNextAvail(bitmapIdx);</span><br><span class="line">        // numAvail代表可以被分配的内存段，无论是否满足条件，都会执行 +1 操作</span><br><span class="line">        if (numAvail ++ == 0) &#123;</span><br><span class="line">            // 因为在这之前，numAvail的值已经为0了，代表已经没有可以重新分配的节点了，已经从链表中删除</span><br><span class="line">            // 可由于现在已经有了新的分配的内存段，所以可以重新将该page加入进链表</span><br><span class="line">            addToPool(head);</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (numAvail != maxNumElems) &#123;</span><br><span class="line">            // 代表当前的page的内存段已经被用掉一部分了，所以直接返回该page被使用了</span><br><span class="line">            return true;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // Subpage not in use (numAvail == maxNumElems)</span><br><span class="line">            // subpage未被使用</span><br><span class="line">            if (prev == next) &#123;</span><br><span class="line">                // 这里是特殊情况，除开头结点</span><br><span class="line">                // Do not remove if this subpage is the only one left in the pool.</span><br><span class="line">                return true;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            // Remove this subpage from the pool if there are other subpages left in the pool.</span><br><span class="line">            doNotDestroy = false;</span><br><span class="line">            removeFromPool();</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void addToPool(PoolSubpage&lt;T&gt; head) &#123;</span><br><span class="line">        assert prev == null &amp;&amp; next == null;</span><br><span class="line">        /**</span><br><span class="line">         * 头插法，添加进链表</span><br><span class="line">         */</span><br><span class="line">        prev = head;</span><br><span class="line">        next = head.next;</span><br><span class="line">        next.prev = this;</span><br><span class="line">        head.next = this;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void removeFromPool() &#123;</span><br><span class="line">        assert prev != null &amp;&amp; next != null;</span><br><span class="line">        // 从链表中移除</span><br><span class="line">        prev.next = next;</span><br><span class="line">        next.prev = prev;</span><br><span class="line">        next = null;</span><br><span class="line">        prev = null;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void setNextAvail(int bitmapIdx) &#123;</span><br><span class="line">        nextAvail = bitmapIdx;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int getNextAvail() &#123;</span><br><span class="line">        int nextAvail = this.nextAvail;</span><br><span class="line">        if (nextAvail &gt;= 0) &#123;</span><br><span class="line">            this.nextAvail = -1;</span><br><span class="line">            return nextAvail;</span><br><span class="line">        &#125;</span><br><span class="line">        return findNextAvail();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int findNextAvail() &#123;</span><br><span class="line">        final long[] bitmap = this.bitmap;</span><br><span class="line">        final int bitmapLength = this.bitmapLength;</span><br><span class="line">        for (int i = 0; i &lt; bitmapLength; i ++) &#123;</span><br><span class="line">            long bits = bitmap[i];</span><br><span class="line">            if (~bits != 0) &#123; //说明有可以被分配的内存段</span><br><span class="line">                return findNextAvail0(i, bits);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private int findNextAvail0(int i, long bits) &#123;</span><br><span class="line">        final int maxNumElems = this.maxNumElems;</span><br><span class="line">        final int baseVal = i &lt;&lt; 6;</span><br><span class="line"></span><br><span class="line">        for (int j = 0; j &lt; 64; j ++) &#123;</span><br><span class="line">            if ((bits &amp; 1) == 0) &#123; // 判断bits的每一位是否可用</span><br><span class="line">                int val = baseVal | j;// 对应的位置置为可用</span><br><span class="line">                if (val &lt; maxNumElems) &#123;</span><br><span class="line">                    return val;</span><br><span class="line">                &#125; else &#123;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            bits &gt;&gt;&gt;= 1;</span><br><span class="line">        &#125;</span><br><span class="line">        return -1;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // TODO 这是一个复合操作的样子，搜索得到的结果是；分隔开哪个是哪个，待全面了解后在做说明</span><br><span class="line">    private long toHandle(int bitmapIdx) &#123;</span><br><span class="line">        // 0x4000,0000,0000,0000L =  2^62</span><br><span class="line">        return 0x4000000000000000L | (long) bitmapIdx &lt;&lt; 32 | memoryMapIdx;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public String toString() &#123;</span><br><span class="line">        final boolean doNotDestroy;</span><br><span class="line">        final int maxNumElems;</span><br><span class="line">        final int numAvail;</span><br><span class="line">        final int elemSize;</span><br><span class="line">        synchronized (chunk.arena) &#123;</span><br><span class="line">            if (!this.doNotDestroy) &#123;</span><br><span class="line">                doNotDestroy = false;</span><br><span class="line">                // Not used for creating the String.</span><br><span class="line">                maxNumElems = numAvail = elemSize = -1;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                doNotDestroy = true;</span><br><span class="line">                maxNumElems = this.maxNumElems;</span><br><span class="line">                numAvail = this.numAvail;</span><br><span class="line">                elemSize = this.elemSize;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (!doNotDestroy) &#123;</span><br><span class="line">            return &quot;(&quot; + memoryMapIdx + &quot;: not in use)&quot;;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return &quot;(&quot; + memoryMapIdx + &quot;: &quot; + (maxNumElems - numAvail) + &apos;/&apos; + maxNumElems +</span><br><span class="line">                &quot;, offset: &quot; + runOffset + &quot;, length: &quot; + pageSize + &quot;, elemSize: &quot; + elemSize + &apos;)&apos;;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int maxNumElements() &#123;</span><br><span class="line">        synchronized (chunk.arena) &#123;</span><br><span class="line">            return maxNumElems;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int numAvailable() &#123;</span><br><span class="line">        synchronized (chunk.arena) &#123;</span><br><span class="line">            return numAvail;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int elementSize() &#123;</span><br><span class="line">        synchronized (chunk.arena) &#123;</span><br><span class="line">            return elemSize;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int pageSize() &#123;</span><br><span class="line">        return pageSize;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void destroy() &#123;</span><br><span class="line">        if (chunk != null) &#123;</span><br><span class="line">            chunk.destroy();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Netty源码阅读/" rel="tag"># Netty源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/11/PoolArena源码阅读/" rel="next" title="PoolArena源码阅读">
+                <i class="fa fa-chevron-left"></i> PoolArena源码阅读
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/12/PooledByteBuf源码阅读/" rel="prev" title="PooledByteBuf源码阅读">
+                PooledByteBuf源码阅读 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ShallWei Zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ShallWeiZeng" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ShallWei Zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

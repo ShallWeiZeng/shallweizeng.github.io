@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-CN">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Netty源码阅读," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="/** * PoolArena源码注释 * */package io.netty.buffer;import io.netty.util.internal.LongCounter;import io.netty.util.internal.PlatformDependent;import io.netty.util.internal.StringUtil;import java.nio.Byte">
+<meta name="keywords" content="Netty源码阅读">
+<meta property="og:type" content="article">
+<meta property="og:title" content="PoolArena源码阅读">
+<meta property="og:url" content="http://yoursite.com/2018/06/11/PoolArena源码阅读/index.html">
+<meta property="og:site_name" content="ShallWei Zeng">
+<meta property="og:description" content="/** * PoolArena源码注释 * */package io.netty.buffer;import io.netty.util.internal.LongCounter;import io.netty.util.internal.PlatformDependent;import io.netty.util.internal.StringUtil;import java.nio.Byte">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2018-06-12T13:14:28.871Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="PoolArena源码阅读">
+<meta name="twitter:description" content="/** * PoolArena源码注释 * */package io.netty.buffer;import io.netty.util.internal.LongCounter;import io.netty.util.internal.PlatformDependent;import io.netty.util.internal.StringUtil;import java.nio.Byte">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/11/PoolArena源码阅读/"/>
+
+
+
+
+
+  <title>PoolArena源码阅读 | ShallWei Zeng</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">ShallWei Zeng</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/11/PoolArena源码阅读/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="ShallWei Zeng">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.gif">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="ShallWei Zeng">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">PoolArena源码阅读</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-11T21:35:57+08:00">
+                2018-06-11 21:35:57
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <a id="more"></a>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">/**</span><br><span class="line"> * PoolArena源码注释</span><br><span class="line"> * */</span><br><span class="line">package io.netty.buffer;</span><br><span class="line"></span><br><span class="line">import io.netty.util.internal.LongCounter;</span><br><span class="line">import io.netty.util.internal.PlatformDependent;</span><br><span class="line">import io.netty.util.internal.StringUtil;</span><br><span class="line"></span><br><span class="line">import java.nio.ByteBuffer;</span><br><span class="line">import java.util.ArrayList;</span><br><span class="line">import java.util.Collections;</span><br><span class="line">import java.util.List;</span><br><span class="line">import java.util.concurrent.atomic.AtomicInteger;</span><br><span class="line"></span><br><span class="line">import static java.lang.Math.max;</span><br><span class="line"></span><br><span class="line">abstract class PoolArena&lt;T&gt; implements PoolArenaMetric &#123;</span><br><span class="line">    //验证是否存在Unsafe类， 这边会尝试通过反射去生成一个类，主要的实例化在PlatformDependent0里面</span><br><span class="line">    static final boolean HAS_UNSAFE = PlatformDependent.hasUnsafe();</span><br><span class="line"></span><br><span class="line">    //设置的三种大小，也即是Jemalloc里面的说明的几种大小</span><br><span class="line">    enum SizeClass &#123;</span><br><span class="line">        Tiny,</span><br><span class="line">        Small,</span><br><span class="line">        Normal</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static final int numTinySubpagePools = 512 &gt;&gt;&gt; 4;</span><br><span class="line">    //每一个arena都有一个allocator，这边指代的是对应allocator</span><br><span class="line">    final PooledByteBufAllocator parent;</span><br><span class="line"></span><br><span class="line">    private final int maxOrder;</span><br><span class="line">    final int pageSize;</span><br><span class="line">    final int pageShifts;</span><br><span class="line">    final int chunkSize;</span><br><span class="line">    final int subpageOverflowMask;</span><br><span class="line">    final int numSmallSubpagePools;</span><br><span class="line">    final int directMemoryCacheAlignment;</span><br><span class="line">    final int directMemoryCacheAlignmentMask;</span><br><span class="line">    private final PoolSubpage&lt;T&gt;[] tinySubpagePools;</span><br><span class="line">    private final PoolSubpage&lt;T&gt;[] smallSubpagePools;</span><br><span class="line"></span><br><span class="line">    //arena当前所处的状态，arena下有多个chunk，每个chunk下有page，q050代表的意思是内存使用率为50%~75%</span><br><span class="line">    /**</span><br><span class="line">     * 在作者本人的论文里面，这里其实代表着有多少个区域已经被使用了，一个arena里面的东西包含了</span><br><span class="line">     * 多个chunk，原论文中采用同样也是采用qinit~q100表示已经用掉的区域的比例</span><br><span class="line">     */</span><br><span class="line">    private final PoolChunkList&lt;T&gt; q050;</span><br><span class="line">    private final PoolChunkList&lt;T&gt; q025;</span><br><span class="line">    private final PoolChunkList&lt;T&gt; q000;</span><br><span class="line">    private final PoolChunkList&lt;T&gt; qInit;</span><br><span class="line">    private final PoolChunkList&lt;T&gt; q075;</span><br><span class="line">    private final PoolChunkList&lt;T&gt; q100;</span><br><span class="line"></span><br><span class="line">    private final List&lt;PoolChunkListMetric&gt; chunkListMetrics;</span><br><span class="line"></span><br><span class="line">    // Metrics for allocations and deallocations</span><br><span class="line">    private long allocationsNormal;</span><br><span class="line">    // We need to use the LongCounter here as this is not guarded via synchronized block.</span><br><span class="line">    // LongCounter 实际上是继承了LongAdder（JDK1.8  Doug Lee）</span><br><span class="line">    private final LongCounter allocationsTiny = PlatformDependent.newLongCounter();</span><br><span class="line">    private final LongCounter allocationsSmall = PlatformDependent.newLongCounter();</span><br><span class="line">    private final LongCounter allocationsHuge = PlatformDependent.newLongCounter();</span><br><span class="line">    private final LongCounter activeBytesHuge = PlatformDependent.newLongCounter();</span><br><span class="line"></span><br><span class="line">    private long deallocationsTiny;</span><br><span class="line">    private long deallocationsSmall;</span><br><span class="line">    private long deallocationsNormal;</span><br><span class="line"></span><br><span class="line">    // We need to use the LongCounter here as this is not guarded via synchronized block.</span><br><span class="line">    private final LongCounter deallocationsHuge = PlatformDependent.newLongCounter();</span><br><span class="line"></span><br><span class="line">    // Number of thread caches backed by this arena.</span><br><span class="line">    // 记录了该arena下有多少的thread cache</span><br><span class="line">    final AtomicInteger numThreadCaches = new AtomicInteger();</span><br><span class="line"></span><br><span class="line">    // TODO: Test if adding padding helps under contention</span><br><span class="line">    //private long pad0, pad1, pad2, pad3, pad4, pad5, pad6, pad7;</span><br><span class="line"></span><br><span class="line">    protected PoolArena(PooledByteBufAllocator parent, int pageSize,</span><br><span class="line">          int maxOrder, int pageShifts, int chunkSize, int cacheAlignment) &#123;</span><br><span class="line">        //每一个arena都有一个allocator</span><br><span class="line">        this.parent = parent;</span><br><span class="line">        //pageSize 默认大小为8192   8kb</span><br><span class="line">        this.pageSize = pageSize;</span><br><span class="line">        // maxOrder  默认为 11 8192 &lt;&lt; 11 = 16 MiB per chunk</span><br><span class="line">        this.maxOrder = maxOrder;</span><br><span class="line">        // pageShifts 由PageSize算出来，公式主要为 Integer.SIZE - 1 - Integer.numberOfLeadingZeros(pageSize) = 32 - 1 - 18 = 13</span><br><span class="line">        this.pageShifts = pageShifts;</span><br><span class="line">        //由pageSize和 maxOrder算出来，里面是一个循环，chunkSize = pageSize &lt;&lt; maxOrder, 其实也就是上面的 8192 &lt;&lt; 11 = 16 MB</span><br><span class="line">        this.chunkSize = chunkSize;</span><br><span class="line">        // 由io.netty.allocator.directMemoryCacheAlignment配置的参数决定，在PooledByteBufAllocator里面被初始化，默认值为0</span><br><span class="line">        directMemoryCacheAlignment = cacheAlignment;</span><br><span class="line">        directMemoryCacheAlignmentMask = cacheAlignment - 1;</span><br><span class="line">        subpageOverflowMask = ~(pageSize - 1);</span><br><span class="line">        // 建立了一个tiny 类型的Subpage数组，长度为 numTinySubpagePools = 512 &gt;&gt; 4 = 32, 每个subPage的大小为8kb</span><br><span class="line">        tinySubpagePools = newSubpagePoolArray(numTinySubpagePools);</span><br><span class="line">        for (int i = 0; i &lt; tinySubpagePools.length; i ++) &#123;</span><br><span class="line">            tinySubpagePools[i] = newSubpagePoolHead(pageSize);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // 默认的numSmallSubpagePools = 13 - 9 = 4</span><br><span class="line">        numSmallSubpagePools = pageShifts - 9;</span><br><span class="line">        // 同样的，建立了一个small类型的SubPagePool 长度为4</span><br><span class="line">        smallSubpagePools = newSubpagePoolArray(numSmallSubpagePools);</span><br><span class="line">        for (int i = 0; i &lt; smallSubpagePools.length; i ++) &#123;</span><br><span class="line">            smallSubpagePools[i] = newSubpagePoolHead(pageSize);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        // arena下chunk的几种使用状态</span><br><span class="line">        q100 = new PoolChunkList&lt;T&gt;(this, null, 100, Integer.MAX_VALUE, chunkSize);</span><br><span class="line">        q075 = new PoolChunkList&lt;T&gt;(this, q100, 75, 100, chunkSize);</span><br><span class="line">        q050 = new PoolChunkList&lt;T&gt;(this, q075, 50, 100, chunkSize);</span><br><span class="line">        q025 = new PoolChunkList&lt;T&gt;(this, q050, 25, 75, chunkSize);</span><br><span class="line">        q000 = new PoolChunkList&lt;T&gt;(this, q025, 1, 50, chunkSize);</span><br><span class="line">        qInit = new PoolChunkList&lt;T&gt;(this, q000, Integer.MIN_VALUE, 25, chunkSize);</span><br><span class="line"></span><br><span class="line">        q100.prevList(q075);</span><br><span class="line">        q075.prevList(q050);</span><br><span class="line">        q050.prevList(q025);</span><br><span class="line">        q025.prevList(q000);</span><br><span class="line">        q000.prevList(null);</span><br><span class="line">        qInit.prevList(qInit);</span><br><span class="line"></span><br><span class="line">        List&lt;PoolChunkListMetric&gt; metrics = new ArrayList&lt;PoolChunkListMetric&gt;(6);</span><br><span class="line">        metrics.add(qInit);</span><br><span class="line">        metrics.add(q000);</span><br><span class="line">        metrics.add(q025);</span><br><span class="line">        metrics.add(q050);</span><br><span class="line">        metrics.add(q075);</span><br><span class="line">        metrics.add(q100);</span><br><span class="line">        // 一个不可修改的List</span><br><span class="line">        chunkListMetrics = Collections.unmodifiableList(metrics);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 每次新建一个PoolSubPage，内部是一个双向链表，用于将PoolSubPage内部再进行分裂，每个subPage内部是8kb</span><br><span class="line">    private PoolSubpage&lt;T&gt; newSubpagePoolHead(int pageSize) &#123;</span><br><span class="line">        PoolSubpage&lt;T&gt; head = new PoolSubpage&lt;T&gt;(pageSize);</span><br><span class="line">        head.prev = head;</span><br><span class="line">        head.next = head;</span><br><span class="line">        return head;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @SuppressWarnings(&quot;unchecked&quot;)</span><br><span class="line">    private PoolSubpage&lt;T&gt;[] newSubpagePoolArray(int size) &#123;</span><br><span class="line">        return new PoolSubpage[size];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // 由下面的两个内部类实现</span><br><span class="line">    abstract boolean isDirect();</span><br><span class="line"></span><br><span class="line">    // 分配内存 TODO 看完PoolThreadCache 需要理解下这边的cache是用作何处，同时这边也需要解释下这些操作完成之后的动作</span><br><span class="line">    PooledByteBuf&lt;T&gt; allocate(PoolThreadCache cache, int reqCapacity, int maxCapacity) &#123;</span><br><span class="line">        PooledByteBuf&lt;T&gt; buf = newByteBuf(maxCapacity);</span><br><span class="line">        allocate(cache, buf, reqCapacity);</span><br><span class="line">        return buf;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // normCapacity 已经被归约过了，只会是2的n次方，且 normCapacity &lt; 512</span><br><span class="line">    /**</span><br><span class="line">     * 因前面的设置，因为前面的设置看出来，tinySubPagePools的每个page大小为8192， </span><br><span class="line">     * 所以这时候进来的假设大小为150， 会被归约到256，而256 &gt;&gt;&gt; 4 = 16,为tinySubpagePools数组下标16的subpages</span><br><span class="line">     */</span><br><span class="line">    static int tinyIdx(int normCapacity) &#123;</span><br><span class="line">        return normCapacity &gt;&gt;&gt; 4;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    /**</span><br><span class="line">     * normCapacity已经进行过归约，一般来说都是2^9以上，拿512举例</span><br><span class="line">     * 512 &gt;&gt;&gt; 10 = 0</span><br><span class="line">     * smallSubpagePools 数组的第一个位置， 同样的每个subPage 8kb</span><br><span class="line">     */</span><br><span class="line">    static int smallIdx(int normCapacity) &#123;</span><br><span class="line">        int tableIdx = 0;</span><br><span class="line">        int i = normCapacity &gt;&gt;&gt; 10;</span><br><span class="line">        while (i != 0) &#123;</span><br><span class="line">            i &gt;&gt;&gt;= 1;</span><br><span class="line">            tableIdx ++;</span><br><span class="line">        &#125;</span><br><span class="line">        return tableIdx;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // capacity &lt; pageSize</span><br><span class="line">    boolean isTinyOrSmall(int normCapacity) &#123;</span><br><span class="line">        return (normCapacity &amp; subpageOverflowMask) == 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // normCapacity &lt; 512</span><br><span class="line">    static boolean isTiny(int normCapacity) &#123;</span><br><span class="line">        return (normCapacity &amp; 0xFFFFFE00) == 0;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void allocate(PoolThreadCache cache, PooledByteBuf&lt;T&gt; buf, final int reqCapacity) &#123;</span><br><span class="line">        //归约申请大小</span><br><span class="line">        final int normCapacity = normalizeCapacity(reqCapacity);</span><br><span class="line">        if (isTinyOrSmall(normCapacity)) &#123; // capacity &lt; pageSize</span><br><span class="line">            int tableIdx;</span><br><span class="line">            PoolSubpage&lt;T&gt;[] table;</span><br><span class="line">            boolean tiny = isTiny(normCapacity);</span><br><span class="line">            if (tiny) &#123; // &lt; 512</span><br><span class="line">                if (cache.allocateTiny(this, buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">                    // was able to allocate out of the cache so move on</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">                tableIdx = tinyIdx(normCapacity);</span><br><span class="line">                table = tinySubpagePools;</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                if (cache.allocateSmall(this, buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">                    // was able to allocate out of the cache so move on</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">                tableIdx = smallIdx(normCapacity);</span><br><span class="line">                table = smallSubpagePools;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            final PoolSubpage&lt;T&gt; head = table[tableIdx];</span><br><span class="line"></span><br><span class="line">            /**</span><br><span class="line">             * Synchronize on the head. This is needed as &#123;@link PoolChunk#allocateSubpage(int)&#125; and</span><br><span class="line">             * &#123;@link PoolChunk#free(long)&#125; may modify the doubly linked list as well.</span><br><span class="line">             */</span><br><span class="line">            synchronized (head) &#123;</span><br><span class="line">                final PoolSubpage&lt;T&gt; s = head.next;</span><br><span class="line">                if (s != head) &#123;</span><br><span class="line">                    assert s.doNotDestroy &amp;&amp; s.elemSize == normCapacity;</span><br><span class="line">                    long handle = s.allocate();</span><br><span class="line">                    assert handle &gt;= 0;</span><br><span class="line">                    // 将分配好的内存放置到buf</span><br><span class="line">                    s.chunk.initBufWithSubpage(buf, handle, reqCapacity);</span><br><span class="line">                    incTinySmallAllocation(tiny);</span><br><span class="line">                    return;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            synchronized (this) &#123;</span><br><span class="line">                allocateNormal(buf, reqCapacity, normCapacity);</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            incTinySmallAllocation(tiny);</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line">        if (normCapacity &lt;= chunkSize) &#123;</span><br><span class="line">            if (cache.allocateNormal(this, buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">                // was able to allocate out of the cache so move on</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line">            synchronized (this) &#123;</span><br><span class="line">                allocateNormal(buf, reqCapacity, normCapacity);</span><br><span class="line">                ++allocationsNormal;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            // Huge allocations are never served via the cache so just call allocateHuge</span><br><span class="line">            allocateHuge(buf, reqCapacity);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    // Method must be called inside synchronized(this) &#123; ... &#125; block</span><br><span class="line">    private void allocateNormal(PooledByteBuf&lt;T&gt; buf, int reqCapacity, int normCapacity) &#123;</span><br><span class="line">        if (q050.allocate(buf, reqCapacity, normCapacity) || q025.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">            q000.allocate(buf, reqCapacity, normCapacity) || qInit.allocate(buf, reqCapacity, normCapacity) ||</span><br><span class="line">            q075.allocate(buf, reqCapacity, normCapacity)) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Add a new chunk.</span><br><span class="line">        PoolChunk&lt;T&gt; c = newChunk(pageSize, maxOrder, pageShifts, chunkSize);</span><br><span class="line">        long handle = c.allocate(normCapacity);</span><br><span class="line">        assert handle &gt; 0;</span><br><span class="line">        c.initBuf(buf, handle, reqCapacity);</span><br><span class="line">        qInit.add(c);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void incTinySmallAllocation(boolean tiny) &#123;</span><br><span class="line">        if (tiny) &#123;</span><br><span class="line">            allocationsTiny.increment();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            allocationsSmall.increment();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void allocateHuge(PooledByteBuf&lt;T&gt; buf, int reqCapacity) &#123;</span><br><span class="line">        PoolChunk&lt;T&gt; chunk = newUnpooledChunk(reqCapacity);</span><br><span class="line">        activeBytesHuge.add(chunk.chunkSize());</span><br><span class="line">        buf.initUnpooled(chunk, reqCapacity);</span><br><span class="line">        allocationsHuge.increment();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void free(PoolChunk&lt;T&gt; chunk, long handle, int normCapacity, PoolThreadCache cache) &#123;</span><br><span class="line">        if (chunk.unpooled) &#123;</span><br><span class="line">            int size = chunk.chunkSize();</span><br><span class="line">            destroyChunk(chunk);</span><br><span class="line">            activeBytesHuge.add(-size);</span><br><span class="line">            deallocationsHuge.increment();</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            SizeClass sizeClass = sizeClass(normCapacity);</span><br><span class="line">            if (cache != null &amp;&amp; cache.add(this, chunk, handle, normCapacity, sizeClass)) &#123;</span><br><span class="line">                // cached so not free it.</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            freeChunk(chunk, handle, sizeClass);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private SizeClass sizeClass(int normCapacity) &#123;</span><br><span class="line">        if (!isTinyOrSmall(normCapacity)) &#123;</span><br><span class="line">            return SizeClass.Normal;</span><br><span class="line">        &#125;</span><br><span class="line">        return isTiny(normCapacity) ? SizeClass.Tiny : SizeClass.Small;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void freeChunk(PoolChunk&lt;T&gt; chunk, long handle, SizeClass sizeClass) &#123;</span><br><span class="line">        final boolean destroyChunk;</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            switch (sizeClass) &#123;</span><br><span class="line">            case Normal:</span><br><span class="line">                ++deallocationsNormal;</span><br><span class="line">                break;</span><br><span class="line">            case Small:</span><br><span class="line">                ++deallocationsSmall;</span><br><span class="line">                break;</span><br><span class="line">            case Tiny:</span><br><span class="line">                ++deallocationsTiny;</span><br><span class="line">                break;</span><br><span class="line">            default:</span><br><span class="line">                throw new Error();</span><br><span class="line">            &#125;</span><br><span class="line">            destroyChunk = !chunk.parent.free(chunk, handle);</span><br><span class="line">        &#125;</span><br><span class="line">        if (destroyChunk) &#123;</span><br><span class="line">            // destroyChunk not need to be called while holding the synchronized lock.</span><br><span class="line">            destroyChunk(chunk);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //传过来的elemSize是正常的经过归约后的数值，即2的整数倍</span><br><span class="line">    PoolSubpage&lt;T&gt; findSubpagePoolHead(int elemSize) &#123;</span><br><span class="line">        int tableIdx;</span><br><span class="line">        PoolSubpage&lt;T&gt;[] table;</span><br><span class="line">        if (isTiny(elemSize)) &#123; // &lt; 512</span><br><span class="line">            //因为tinySubpagePools是长度为32的数组， 每个元素大小为512b，其实为一个page分割成为32份(2的5次方)</span><br><span class="line">            //每份为512b。这边是一种恰好取巧的一种定位下标的方式</span><br><span class="line">            tableIdx = elemSize &gt;&gt;&gt; 4;</span><br><span class="line">            table = tinySubpagePools;</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            //这边也是同样的道理，一个page大小为2^13=8192, small大小的分割为   Quantum-spaced，分割单位是2kb</span><br><span class="line">            //因为到达这边的大小是至多一个pageSize, 而在这个分类下，分成了四份，参见PoolArena的构造方式</span><br><span class="line">            tableIdx = 0;</span><br><span class="line">            //这边为什么是&gt;&gt;&gt;10的原因：按elemSize=2048来举例，这时候，刚好是属于第二个元素的开始范围2048~4096，所以下标会得到1</span><br><span class="line">            //以这样的方式来看，0~2048的都会被分配到第一个元素，elemSize也只能为512或1024</span><br><span class="line">            elemSize &gt;&gt;&gt;= 10;</span><br><span class="line">            while (elemSize != 0) &#123;</span><br><span class="line">                elemSize &gt;&gt;&gt;= 1;</span><br><span class="line">                tableIdx ++;</span><br><span class="line">            &#125;</span><br><span class="line">            table = smallSubpagePools;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        return table[tableIdx];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    //内部方法 </span><br><span class="line">    int normalizeCapacity(int reqCapacity) &#123;</span><br><span class="line">        if (reqCapacity &lt; 0) &#123;</span><br><span class="line">            throw new IllegalArgumentException(&quot;capacity: &quot; + reqCapacity + &quot; (expected: 0+)&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        //如果一次申请的大小大于一个chunk的大小，依据directMemoryCacheAlignment是否对齐来决定是否进行, chunkSize 16Mb = 2^24</span><br><span class="line">        if (reqCapacity &gt;= chunkSize) &#123;</span><br><span class="line">            return directMemoryCacheAlignment == 0 ? reqCapacity : alignCapacity(reqCapacity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (!isTiny(reqCapacity)) &#123; // &gt;= 512</span><br><span class="line">            // Doubled</span><br><span class="line"></span><br><span class="line">            int normalizedCapacity = reqCapacity;</span><br><span class="line">            //下面的代码主要是将reqCapacity向上归约到里reqCapacity最近的2的整数倍</span><br><span class="line">            normalizedCapacity --;</span><br><span class="line">            normalizedCapacity |= normalizedCapacity &gt;&gt;&gt;  1;</span><br><span class="line">            normalizedCapacity |= normalizedCapacity &gt;&gt;&gt;  2;</span><br><span class="line">            normalizedCapacity |= normalizedCapacity &gt;&gt;&gt;  4;</span><br><span class="line">            normalizedCapacity |= normalizedCapacity &gt;&gt;&gt;  8;</span><br><span class="line">            normalizedCapacity |= normalizedCapacity &gt;&gt;&gt; 16;</span><br><span class="line">            normalizedCapacity ++;</span><br><span class="line">            //防止溢出</span><br><span class="line">            if (normalizedCapacity &lt; 0) &#123;</span><br><span class="line">                normalizedCapacity &gt;&gt;&gt;= 1;</span><br><span class="line">            &#125;</span><br><span class="line">            assert directMemoryCacheAlignment == 0 || (normalizedCapacity &amp; directMemoryCacheAlignmentMask) == 0;</span><br><span class="line"></span><br><span class="line">            return normalizedCapacity;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (directMemoryCacheAlignment &gt; 0) &#123;</span><br><span class="line">            return alignCapacity(reqCapacity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        // Quantum-spaced 16 &amp; 15 = 0 这边最小能得到16</span><br><span class="line">        if ((reqCapacity &amp; 15) == 0) &#123;</span><br><span class="line">            return reqCapacity;</span><br><span class="line">        &#125;</span><br><span class="line">        // 括号部分是归约到16的正数倍上</span><br><span class="line">        return (reqCapacity &amp; ~15) + 16;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    //对齐大小</span><br><span class="line">    int alignCapacity(int reqCapacity) &#123;</span><br><span class="line">        //按照设置directMemoryCacheAlignmentMask 应该是二进制除开符号位全为1的数， 在进行&amp;运算,如果本身是小于的int长度，那么出来的结果就是reqCapacity本身</span><br><span class="line">        //这样做的目的是保证请求的大小在int范围内，防止溢出，然后这句话reqCapacity + directMemoryCacheAlignment - delta会相当于最后结果是directMemoryCacheAlignment （TODO 暂未考虑到特殊情况的）</span><br><span class="line">        //未能准确的理解directMemoryCacheAlignment所产生的作用(TODO)</span><br><span class="line">        int delta = reqCapacity &amp; directMemoryCacheAlignmentMask;</span><br><span class="line">        return delta == 0 ? reqCapacity : reqCapacity + directMemoryCacheAlignment - delta;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    void reallocate(PooledByteBuf&lt;T&gt; buf, int newCapacity, boolean freeOldMemory) &#123;</span><br><span class="line">        if (newCapacity &lt; 0 || newCapacity &gt; buf.maxCapacity()) &#123;</span><br><span class="line">            throw new IllegalArgumentException(&quot;newCapacity: &quot; + newCapacity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        int oldCapacity = buf.length;</span><br><span class="line">        if (oldCapacity == newCapacity) &#123;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        PoolChunk&lt;T&gt; oldChunk = buf.chunk;</span><br><span class="line">        long oldHandle = buf.handle;</span><br><span class="line">        T oldMemory = buf.memory;</span><br><span class="line">        int oldOffset = buf.offset;</span><br><span class="line">        int oldMaxLength = buf.maxLength;</span><br><span class="line">        int readerIndex = buf.readerIndex();</span><br><span class="line">        int writerIndex = buf.writerIndex();</span><br><span class="line"></span><br><span class="line">        allocate(parent.threadCache(), buf, newCapacity);</span><br><span class="line">        if (newCapacity &gt; oldCapacity) &#123;</span><br><span class="line">            memoryCopy(</span><br><span class="line">                    oldMemory, oldOffset,</span><br><span class="line">                    buf.memory, buf.offset, oldCapacity);</span><br><span class="line">        &#125; else if (newCapacity &lt; oldCapacity) &#123;</span><br><span class="line">            if (readerIndex &lt; newCapacity) &#123;</span><br><span class="line">                if (writerIndex &gt; newCapacity) &#123;</span><br><span class="line">                    writerIndex = newCapacity;</span><br><span class="line">                &#125;</span><br><span class="line">                memoryCopy(</span><br><span class="line">                        oldMemory, oldOffset + readerIndex,</span><br><span class="line">                        buf.memory, buf.offset + readerIndex, writerIndex - readerIndex);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                readerIndex = writerIndex = newCapacity;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        buf.setIndex(readerIndex, writerIndex);</span><br><span class="line"></span><br><span class="line">        if (freeOldMemory) &#123;</span><br><span class="line">            free(oldChunk, oldHandle, oldMaxLength, buf.cache);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int numThreadCaches() &#123;</span><br><span class="line">        return numThreadCaches.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int numTinySubpages() &#123;</span><br><span class="line">        return tinySubpagePools.length;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int numSmallSubpages() &#123;</span><br><span class="line">        return smallSubpagePools.length;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public int numChunkLists() &#123;</span><br><span class="line">        return chunkListMetrics.size();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;PoolSubpageMetric&gt; tinySubpages() &#123;</span><br><span class="line">        return subPageMetricList(tinySubpagePools);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;PoolSubpageMetric&gt; smallSubpages() &#123;</span><br><span class="line">        return subPageMetricList(smallSubpagePools);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public List&lt;PoolChunkListMetric&gt; chunkLists() &#123;</span><br><span class="line">        return chunkListMetrics;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static List&lt;PoolSubpageMetric&gt; subPageMetricList(PoolSubpage&lt;?&gt;[] pages) &#123;</span><br><span class="line">        List&lt;PoolSubpageMetric&gt; metrics = new ArrayList&lt;PoolSubpageMetric&gt;();</span><br><span class="line">        for (PoolSubpage&lt;?&gt; head : pages) &#123;</span><br><span class="line">            if (head.next == head) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line">            PoolSubpage&lt;?&gt; s = head.next;</span><br><span class="line">            for (;;) &#123;</span><br><span class="line">                metrics.add(s);</span><br><span class="line">                s = s.next;</span><br><span class="line">                if (s == head) &#123;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return metrics;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numAllocations() &#123;</span><br><span class="line">        final long allocsNormal;</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            allocsNormal = allocationsNormal;</span><br><span class="line">        &#125;</span><br><span class="line">        return allocationsTiny.value() + allocationsSmall.value() + allocsNormal + allocationsHuge.value();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numTinyAllocations() &#123;</span><br><span class="line">        return allocationsTiny.value();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numSmallAllocations() &#123;</span><br><span class="line">        return allocationsSmall.value();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public synchronized long numNormalAllocations() &#123;</span><br><span class="line">        return allocationsNormal;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numDeallocations() &#123;</span><br><span class="line">        final long deallocs;</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            deallocs = deallocationsTiny + deallocationsSmall + deallocationsNormal;</span><br><span class="line">        &#125;</span><br><span class="line">        return deallocs + deallocationsHuge.value();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public synchronized long numTinyDeallocations() &#123;</span><br><span class="line">        return deallocationsTiny;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public synchronized long numSmallDeallocations() &#123;</span><br><span class="line">        return deallocationsSmall;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public synchronized long numNormalDeallocations() &#123;</span><br><span class="line">        return deallocationsNormal;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numHugeAllocations() &#123;</span><br><span class="line">        return allocationsHuge.value();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numHugeDeallocations() &#123;</span><br><span class="line">        return deallocationsHuge.value();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public  long numActiveAllocations() &#123;</span><br><span class="line">        long val = allocationsTiny.value() + allocationsSmall.value() + allocationsHuge.value()</span><br><span class="line">                - deallocationsHuge.value();</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            val += allocationsNormal - (deallocationsTiny + deallocationsSmall + deallocationsNormal);</span><br><span class="line">        &#125;</span><br><span class="line">        return max(val, 0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numActiveTinyAllocations() &#123;</span><br><span class="line">        return max(numTinyAllocations() - numTinyDeallocations(), 0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numActiveSmallAllocations() &#123;</span><br><span class="line">        return max(numSmallAllocations() - numSmallDeallocations(), 0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numActiveNormalAllocations() &#123;</span><br><span class="line">        final long val;</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            val = allocationsNormal - deallocationsNormal;</span><br><span class="line">        &#125;</span><br><span class="line">        return max(val, 0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numActiveHugeAllocations() &#123;</span><br><span class="line">        return max(numHugeAllocations() - numHugeDeallocations(), 0);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public long numActiveBytes() &#123;</span><br><span class="line">        long val = activeBytesHuge.value();</span><br><span class="line">        synchronized (this) &#123;</span><br><span class="line">            for (int i = 0; i &lt; chunkListMetrics.size(); i++) &#123;</span><br><span class="line">                for (PoolChunkMetric m: chunkListMetrics.get(i)) &#123;</span><br><span class="line">                    val += m.chunkSize();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        return max(0, val);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    protected abstract PoolChunk&lt;T&gt; newChunk(int pageSize, int maxOrder, int pageShifts, int chunkSize);</span><br><span class="line">    protected abstract PoolChunk&lt;T&gt; newUnpooledChunk(int capacity);</span><br><span class="line">    protected abstract PooledByteBuf&lt;T&gt; newByteBuf(int maxCapacity);</span><br><span class="line">    protected abstract void memoryCopy(T src, int srcOffset, T dst, int dstOffset, int length);</span><br><span class="line">    protected abstract void destroyChunk(PoolChunk&lt;T&gt; chunk);</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public synchronized String toString() &#123;</span><br><span class="line">        StringBuilder buf = new StringBuilder()</span><br><span class="line">            .append(&quot;Chunk(s) at 0~25%:&quot;)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(qInit)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(&quot;Chunk(s) at 0~50%:&quot;)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(q000)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(&quot;Chunk(s) at 25~75%:&quot;)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(q025)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(&quot;Chunk(s) at 50~100%:&quot;)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(q050)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(&quot;Chunk(s) at 75~100%:&quot;)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(q075)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(&quot;Chunk(s) at 100%:&quot;)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(q100)</span><br><span class="line">            .append(StringUtil.NEWLINE)</span><br><span class="line">            .append(&quot;tiny subpages:&quot;);</span><br><span class="line">        appendPoolSubPages(buf, tinySubpagePools);</span><br><span class="line">        buf.append(StringUtil.NEWLINE)</span><br><span class="line">           .append(&quot;small subpages:&quot;);</span><br><span class="line">        appendPoolSubPages(buf, smallSubpagePools);</span><br><span class="line">        buf.append(StringUtil.NEWLINE);</span><br><span class="line"></span><br><span class="line">        return buf.toString();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void appendPoolSubPages(StringBuilder buf, PoolSubpage&lt;?&gt;[] subpages) &#123;</span><br><span class="line">        for (int i = 0; i &lt; subpages.length; i ++) &#123;</span><br><span class="line">            PoolSubpage&lt;?&gt; head = subpages[i];</span><br><span class="line">            if (head.next == head) &#123;</span><br><span class="line">                continue;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            buf.append(StringUtil.NEWLINE)</span><br><span class="line">                    .append(i)</span><br><span class="line">                    .append(&quot;: &quot;);</span><br><span class="line">            PoolSubpage&lt;?&gt; s = head.next;</span><br><span class="line">            for (;;) &#123;</span><br><span class="line">                buf.append(s);</span><br><span class="line">                s = s.next;</span><br><span class="line">                if (s == head) &#123;</span><br><span class="line">                    break;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected final void finalize() throws Throwable &#123;</span><br><span class="line">        try &#123;</span><br><span class="line">            super.finalize();</span><br><span class="line">        &#125; finally &#123;</span><br><span class="line">            destroyPoolSubPages(smallSubpagePools);</span><br><span class="line">            destroyPoolSubPages(tinySubpagePools);</span><br><span class="line">            destroyPoolChunkLists(qInit, q000, q025, q050, q075, q100);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private static void destroyPoolSubPages(PoolSubpage&lt;?&gt;[] pages) &#123;</span><br><span class="line">        for (PoolSubpage&lt;?&gt; page : pages) &#123;</span><br><span class="line">            page.destroy();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    private void destroyPoolChunkLists(PoolChunkList&lt;T&gt;... chunkLists) &#123;</span><br><span class="line">        for (PoolChunkList&lt;T&gt; chunkList: chunkLists) &#123;</span><br><span class="line">            chunkList.destroy(this);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static final class HeapArena extends PoolArena&lt;byte[]&gt; &#123;</span><br><span class="line"></span><br><span class="line">        HeapArena(PooledByteBufAllocator parent, int pageSize, int maxOrder,</span><br><span class="line">                int pageShifts, int chunkSize, int directMemoryCacheAlignment) &#123;</span><br><span class="line">            super(parent, pageSize, maxOrder, pageShifts, chunkSize,</span><br><span class="line">                    directMemoryCacheAlignment);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private static byte[] newByteArray(int size) &#123;</span><br><span class="line">            return PlatformDependent.allocateUninitializedArray(size);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        boolean isDirect() &#123;</span><br><span class="line">            return false;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected PoolChunk&lt;byte[]&gt; newChunk(int pageSize, int maxOrder, int pageShifts, int chunkSize) &#123;</span><br><span class="line">            return new PoolChunk&lt;byte[]&gt;(this, newByteArray(chunkSize), pageSize, maxOrder, pageShifts, chunkSize, 0);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected PoolChunk&lt;byte[]&gt; newUnpooledChunk(int capacity) &#123;</span><br><span class="line">            return new PoolChunk&lt;byte[]&gt;(this, newByteArray(capacity), capacity, 0);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected void destroyChunk(PoolChunk&lt;byte[]&gt; chunk) &#123;</span><br><span class="line">            // Rely on GC.</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected PooledByteBuf&lt;byte[]&gt; newByteBuf(int maxCapacity) &#123;</span><br><span class="line">            return HAS_UNSAFE ? PooledUnsafeHeapByteBuf.newUnsafeInstance(maxCapacity)</span><br><span class="line">                    : PooledHeapByteBuf.newInstance(maxCapacity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected void memoryCopy(byte[] src, int srcOffset, byte[] dst, int dstOffset, int length) &#123;</span><br><span class="line">            if (length == 0) &#123;</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            System.arraycopy(src, srcOffset, dst, dstOffset, length);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    static final class DirectArena extends PoolArena&lt;ByteBuffer&gt; &#123;</span><br><span class="line"></span><br><span class="line">        DirectArena(PooledByteBufAllocator parent, int pageSize, int maxOrder,</span><br><span class="line">                int pageShifts, int chunkSize, int directMemoryCacheAlignment) &#123;</span><br><span class="line">            super(parent, pageSize, maxOrder, pageShifts, chunkSize,</span><br><span class="line">                    directMemoryCacheAlignment);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        boolean isDirect() &#123;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private int offsetCacheLine(ByteBuffer memory) &#123;</span><br><span class="line">            // We can only calculate the offset if Unsafe is present as otherwise directBufferAddress(...) will</span><br><span class="line">            // throw an NPE.</span><br><span class="line">            return HAS_UNSAFE ?</span><br><span class="line">                    (int) (PlatformDependent.directBufferAddress(memory) &amp; directMemoryCacheAlignmentMask) : 0;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected PoolChunk&lt;ByteBuffer&gt; newChunk(int pageSize, int maxOrder,</span><br><span class="line">                int pageShifts, int chunkSize) &#123;</span><br><span class="line">            if (directMemoryCacheAlignment == 0) &#123;</span><br><span class="line">                return new PoolChunk&lt;ByteBuffer&gt;(this,</span><br><span class="line">                        allocateDirect(chunkSize), pageSize, maxOrder,</span><br><span class="line">                        pageShifts, chunkSize, 0);</span><br><span class="line">            &#125;</span><br><span class="line">            final ByteBuffer memory = allocateDirect(chunkSize</span><br><span class="line">                    + directMemoryCacheAlignment);</span><br><span class="line">            return new PoolChunk&lt;ByteBuffer&gt;(this, memory, pageSize,</span><br><span class="line">                    maxOrder, pageShifts, chunkSize,</span><br><span class="line">                    offsetCacheLine(memory));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected PoolChunk&lt;ByteBuffer&gt; newUnpooledChunk(int capacity) &#123;</span><br><span class="line">            if (directMemoryCacheAlignment == 0) &#123;</span><br><span class="line">                return new PoolChunk&lt;ByteBuffer&gt;(this,</span><br><span class="line">                        allocateDirect(capacity), capacity, 0);</span><br><span class="line">            &#125;</span><br><span class="line">            final ByteBuffer memory = allocateDirect(capacity</span><br><span class="line">                    + directMemoryCacheAlignment);</span><br><span class="line">            return new PoolChunk&lt;ByteBuffer&gt;(this, memory, capacity,</span><br><span class="line">                    offsetCacheLine(memory));</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        private static ByteBuffer allocateDirect(int capacity) &#123;</span><br><span class="line">            return PlatformDependent.useDirectBufferNoCleaner() ?</span><br><span class="line">                    PlatformDependent.allocateDirectNoCleaner(capacity) : ByteBuffer.allocateDirect(capacity);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected void destroyChunk(PoolChunk&lt;ByteBuffer&gt; chunk) &#123;</span><br><span class="line">            if (PlatformDependent.useDirectBufferNoCleaner()) &#123;</span><br><span class="line">                PlatformDependent.freeDirectNoCleaner(chunk.memory);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                PlatformDependent.freeDirectBuffer(chunk.memory);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected PooledByteBuf&lt;ByteBuffer&gt; newByteBuf(int maxCapacity) &#123;</span><br><span class="line">            if (HAS_UNSAFE) &#123;</span><br><span class="line">                return PooledUnsafeDirectByteBuf.newInstance(maxCapacity);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                return PooledDirectByteBuf.newInstance(maxCapacity);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        @Override</span><br><span class="line">        protected void memoryCopy(ByteBuffer src, int srcOffset, ByteBuffer dst, int dstOffset, int length) &#123;</span><br><span class="line">            if (length == 0) &#123;</span><br><span class="line">                return;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            if (HAS_UNSAFE) &#123;</span><br><span class="line">                PlatformDependent.copyMemory(</span><br><span class="line">                        PlatformDependent.directBufferAddress(src) + srcOffset,</span><br><span class="line">                        PlatformDependent.directBufferAddress(dst) + dstOffset, length);</span><br><span class="line">            &#125; else &#123;</span><br><span class="line">                // We must duplicate the NIO buffers because they may be accessed by other Netty buffers.</span><br><span class="line">                src = src.duplicate();</span><br><span class="line">                dst = dst.duplicate();</span><br><span class="line">                src.position(srcOffset).limit(srcOffset + length);</span><br><span class="line">                dst.position(dstOffset);</span><br><span class="line">                dst.put(src);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Netty源码阅读/" rel="tag"># Netty源码阅读</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/06/11/PoolChunk源码阅读/" rel="next" title="PoolChunk源码阅读">
+                <i class="fa fa-chevron-left"></i> PoolChunk源码阅读
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/06/11/PoolSubpage源码阅读/" rel="prev" title="PoolSubpage源码阅读">
+                PoolSubpage源码阅读 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+
+      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <p class="site-author-name" itemprop="name">ShallWei Zeng</p>
+              <p class="site-description motion-element" itemprop="description"></p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">15</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">7</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/ShallWeiZeng" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">ShallWei Zeng</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
